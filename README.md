@@ -85,7 +85,7 @@ Three isolated Zustand stores prevent cross-feature rerenders:
 |-------|----------------|
 | `FeedStore` | 120 travel bundles (static mock data) |
 | `ChatStore` | Messages, thinking/streaming state |
-| `PerformanceStore` | FPS, frame drops, JS thread status, percentiles |
+| `PerformanceStore` | Session drops, JS scheduling status, percentiles |
 
 **Selectors** are used everywhere to subscribe to minimal state slices. Sheet open/close is controlled via **ref methods** only — not Zustand — so the feed never rerenders when the sheet opens.
 
@@ -114,7 +114,19 @@ In `__DEV__`, components log rerenders to the console:
 
 ### Performance Overlay
 
-Tap the **Perf** button (bottom-left) in development to toggle the draggable overlay showing FPS, frame drops, JS thread status, and frame time percentiles.
+Tap the **Perf** button (bottom-left) in development to toggle the draggable overlay.
+
+#### How to Read Metrics
+
+| Label | Meaning |
+|-------|---------|
+| **UI FPS (compositor)** | Native UI thread frame pacing via Reanimated `useFrameCallback`. Target: ~60 (or ~120 on ProMotion). |
+| **JS FPS (event loop)** | JS `requestAnimationFrame` cadence, auto-calibrated to match display rate. Compare against UI FPS — UI should stay higher under load. |
+| **Session Drops** | Cumulative frames exceeding 22.2ms since overlay opened. Resets each time overlay opens. |
+| **JS Scheduling** | Heuristic: `Healthy` vs `JS Busy` based on event loop scheduling delay. Not a native profiler. |
+| **P50 / P95 / Worst (1s window)** | Frame time percentiles from the last ~60 frames (~1 second). |
+
+Metrics include dev overlay overhead — use for **relative** before/after comparisons, not absolute production baselines. See [PERFORMANCE.md](PERFORMANCE.md) for full methodology.
 
 ## Known Limitations
 

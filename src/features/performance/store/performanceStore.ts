@@ -6,22 +6,19 @@ import { createSelectors } from '@/features/shared/utils/createSelectors';
 export type JsThreadStatus = 'Healthy' | 'JS Busy';
 
 type PerformanceState = {
-  fps: number;
   frameDrops: number;
   jsThreadStatus: JsThreadStatus;
   p50FrameTime: number;
   p95FrameTime: number;
   worstFrameTime: number;
   isOverlayVisible: boolean;
-  updateFps: (fps: number) => void;
-  incrementFrameDrops: () => void;
   updateFrameStats: (stats: FrameStats) => void;
+  syncFrameDrops: (drops: number) => void;
   setJsThreadStatus: (status: JsThreadStatus) => void;
   toggleOverlay: () => void;
 };
 
 const usePerformanceStoreBase = create<PerformanceState>((set) => ({
-  fps: 60,
   frameDrops: 0,
   jsThreadStatus: 'Healthy',
   p50FrameTime: 0,
@@ -29,24 +26,30 @@ const usePerformanceStoreBase = create<PerformanceState>((set) => ({
   worstFrameTime: 0,
   isOverlayVisible: false,
 
-  updateFps: (fps) => {
-    set({ fps });
-  },
-
-  incrementFrameDrops: () => {
-    set((state) => ({ frameDrops: state.frameDrops + 1 }));
-  },
-
   updateFrameStats: (stats) => {
-    set({
-      p50FrameTime: stats.p50FrameTime,
-      p95FrameTime: stats.p95FrameTime,
-      worstFrameTime: stats.worstFrameTime,
+    set((state) => {
+      if (
+        state.p50FrameTime === stats.p50FrameTime &&
+        state.p95FrameTime === stats.p95FrameTime &&
+        state.worstFrameTime === stats.worstFrameTime
+      ) {
+        return state;
+      }
+
+      return {
+        p50FrameTime: stats.p50FrameTime,
+        p95FrameTime: stats.p95FrameTime,
+        worstFrameTime: stats.worstFrameTime,
+      };
     });
   },
 
+  syncFrameDrops: (drops) => {
+    set((state) => (state.frameDrops === drops ? state : { frameDrops: drops }));
+  },
+
   setJsThreadStatus: (status) => {
-    set({ jsThreadStatus: status });
+    set((state) => (state.jsThreadStatus === status ? state : { jsThreadStatus: status }));
   },
 
   toggleOverlay: () => {

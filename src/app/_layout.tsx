@@ -11,14 +11,18 @@ import {
   type ChatBottomSheetRef,
 } from '@/features/chat/components/ChatBottomSheet';
 import { FeedFab } from '@/features/feed/components/FeedFab';
+import { PerformanceMetricsProvider } from '@/features/performance/context/PerformanceMetricsContext';
 import { DevOverlayToggle } from '@/features/performance/components/DevOverlayToggle';
 import { PerformanceOverlay } from '@/features/performance/components/PerformanceOverlay';
 import { usePerformanceInstrumentation } from '@/features/performance/hooks/usePerformanceInstrumentation';
 
+function PerformanceInstrumentation() {
+  usePerformanceInstrumentation();
+  return null;
+}
+
 export default function RootLayout() {
   const chatSheetRef = useRef<ChatBottomSheetRef>(null);
-
-  usePerformanceInstrumentation();
 
   const openChat = useCallback(() => {
     chatSheetRef.current?.open();
@@ -27,17 +31,20 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <Slot />
-        <View style={styles.overlay} pointerEvents="box-none">
-          <FeedFab onPress={openChat} />
-          <ChatBottomSheet ref={chatSheetRef} />
-          {__DEV__ ? (
-            <>
-              <DevOverlayToggle />
-              <PerformanceOverlay />
-            </>
-          ) : null}
-        </View>
+        <PerformanceMetricsProvider>
+          <PerformanceInstrumentation />
+          <Slot />
+          <View style={styles.overlay} pointerEvents="box-none">
+            <FeedFab onPress={openChat} />
+            <ChatBottomSheet ref={chatSheetRef} />
+            {__DEV__ ? (
+              <>
+                <DevOverlayToggle />
+                <PerformanceOverlay />
+              </>
+            ) : null}
+          </View>
+        </PerformanceMetricsProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

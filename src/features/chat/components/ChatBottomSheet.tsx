@@ -17,7 +17,6 @@ import { StyleSheet } from 'react-native';
 import { ChatMessageList } from '@/features/chat/components/ChatMessageList';
 import { ChatSheetFooter } from '@/features/chat/components/ChatSheetFooter';
 import { colors } from '@/features/shared/constants/theme';
-import { useRerenderLogger } from '@/features/shared/utils/rerenderLogger';
 
 export type ChatBottomSheetRef = {
   open: () => void;
@@ -25,8 +24,6 @@ export type ChatBottomSheetRef = {
 };
 
 function ChatBottomSheetComponent(_: object, ref: Ref<ChatBottomSheetRef>) {
-  useRerenderLogger('ChatBottomSheet');
-
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => ['50%', '92%'], []);

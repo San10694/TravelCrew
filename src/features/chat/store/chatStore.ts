@@ -9,7 +9,7 @@ type ChatState = {
   isStreaming: boolean;
   addUserMessage: (content: string) => void;
   startAssistantResponse: (messageId: string) => void;
-  appendToken: (messageId: string, token: string) => void;
+  appendTokenBatch: (messageId: string, chunk: string) => void;
   finishStreaming: () => void;
   setThinking: (value: boolean) => void;
 };
@@ -44,22 +44,45 @@ const useChatStoreBase = create<ChatState>((set) => ({
     }));
   },
 
-  appendToken: (messageId, token) => {
-    set((state) => ({
-      messages: state.messages.map((message) =>
-        message.id === messageId
-          ? { ...message, content: message.content + token }
-          : message,
-      ),
-    }));
+  appendTokenBatch: (messageId, chunk) => {
+    if (chunk.length === 0) {
+      return;
+    }
+
+    set((state) => {
+      const messageIndex = state.messages.findIndex((message) => message.id === messageId);
+
+      if (messageIndex === -1) {
+        return state;
+      }
+
+      const targetMessage = state.messages[messageIndex] as Message;
+      const updatedMessage: Message = {
+        ...targetMessage,
+        content: targetMessage.content + chunk,
+      };
+
+      if (updatedMessage.content === targetMessage.content) {
+        return state;
+      }
+
+      const messages = state.messages.slice();
+      messages[messageIndex] = updatedMessage;
+
+      return { messages };
+    });
   },
 
   finishStreaming: () => {
-    set({ isStreaming: false, isThinking: false });
+    set((state) =>
+      state.isStreaming || state.isThinking
+        ? { isStreaming: false, isThinking: false }
+        : state,
+    );
   },
 
   setThinking: (value) => {
-    set({ isThinking: value });
+    set((state) => (state.isThinking === value ? state : { isThinking: value }));
   },
 }));
 

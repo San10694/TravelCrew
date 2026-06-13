@@ -3,47 +3,37 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
-import { MetricRow } from '@/features/performance/components/MetricRow';
+import { usePerformanceMetrics } from '@/features/performance/context/PerformanceMetricsContext';
+import {
+  NativeMetricText,
+  StaticMetricText,
+} from '@/features/performance/components/NativeMetricText';
 import { usePerformanceStore } from '@/features/performance/store/performanceStore';
 import { colors, spacing, typography } from '@/features/shared/constants/theme';
-import { useRerenderLogger } from '@/features/shared/utils/rerenderLogger';
 
-function FpsMetric() {
-  const fps = usePerformanceStore((state) => state.fps);
-  const color = fps >= 55 ? colors.success : fps >= 45 ? colors.warning : colors.danger;
-  return <MetricRow label="FPS" value={String(fps)} valueColor={color} />;
-}
-
-function FrameDropsMetric() {
-  const frameDrops = usePerformanceStore((state) => state.frameDrops);
-  return <MetricRow label="Frame Drops" value={String(frameDrops)} />;
-}
-
-function JsThreadMetric() {
-  const jsThreadStatus = usePerformanceStore((state) => state.jsThreadStatus);
-  const color = jsThreadStatus === 'Healthy' ? colors.success : colors.danger;
-  return <MetricRow label="JS Thread" value={jsThreadStatus} valueColor={color} />;
-}
-
-function P50Metric() {
+function PercentileMetrics() {
   const p50FrameTime = usePerformanceStore((state) => state.p50FrameTime);
-  return <MetricRow label="P50 Frame Time" value={`${p50FrameTime}ms`} />;
-}
-
-function P95Metric() {
   const p95FrameTime = usePerformanceStore((state) => state.p95FrameTime);
-  return <MetricRow label="P95 Frame Time" value={`${p95FrameTime}ms`} />;
+  const worstFrameTime = usePerformanceStore((state) => state.worstFrameTime);
+
+  return (
+    <>
+      <StaticMetricText label="P50 (1s window)" value={`${p50FrameTime}ms`} />
+      <StaticMetricText label="P95 (1s window)" value={`${p95FrameTime}ms`} />
+      <StaticMetricText label="Worst (1s window)" value={`${worstFrameTime}ms`} />
+    </>
+  );
 }
 
-function WorstFrameMetric() {
-  const worstFrameTime = usePerformanceStore((state) => state.worstFrameTime);
-  return <MetricRow label="Worst Frame" value={`${worstFrameTime}ms`} />;
+function SessionDropsMetric() {
+  const frameDrops = usePerformanceStore((state) => state.frameDrops);
+
+  return <StaticMetricText label="Session Drops" value={String(frameDrops)} />;
 }
 
 function PerformanceOverlayComponent() {
-  useRerenderLogger('PerformanceOverlay');
-
   const isOverlayVisible = usePerformanceStore((state) => state.isOverlayVisible);
+  const { uiFpsText, jsFpsText, jsThreadStatusText } = usePerformanceMetrics();
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -77,12 +67,12 @@ function PerformanceOverlayComponent() {
     <GestureDetector gesture={panGesture}>
       <Animated.View style={[styles.overlay, animatedStyle]} pointerEvents="box-none">
         <Text style={styles.title}>Performance</Text>
-        <FpsMetric />
-        <FrameDropsMetric />
-        <JsThreadMetric />
-        <P50Metric />
-        <P95Metric />
-        <WorstFrameMetric />
+        <Text style={styles.note}>Metrics include dev overlay overhead</Text>
+        <NativeMetricText label="UI FPS (compositor)" value={uiFpsText} />
+        <NativeMetricText label="JS FPS (event loop)" value={jsFpsText} />
+        <SessionDropsMetric />
+        <NativeMetricText label="JS Scheduling" value={jsThreadStatusText} />
+        <PercentileMetrics />
       </Animated.View>
     </GestureDetector>
   );
@@ -91,6 +81,11 @@ function PerformanceOverlayComponent() {
 export const PerformanceOverlay = memo(PerformanceOverlayComponent);
 
 const styles = StyleSheet.create({
+  note: {
+    color: '#CBD5E1',
+    fontSize: typography.caption - 1,
+    marginBottom: spacing.sm,
+  },
   overlay: {
     backgroundColor: colors.overlay,
     borderRadius: 12,
@@ -98,13 +93,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     position: 'absolute',
     top: 0,
-    width: 220,
+    width: 260,
     zIndex: 9999,
   },
   title: {
     color: colors.surface,
     fontSize: typography.subtitle,
     fontWeight: '700',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
 });

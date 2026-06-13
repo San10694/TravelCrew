@@ -1,10 +1,5 @@
-import { memo, useEffect } from 'react';
-import Animated, {
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { memo } from 'react';
+import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import { ItineraryList } from '@/features/feed/components/ItineraryList';
 import type { ItineraryItem } from '@/features/feed/types/travelBundle';
@@ -12,25 +7,24 @@ import { layout } from '@/features/shared/constants/theme';
 
 type ExpandableDetailsProps = {
   isExpanded: boolean;
+  expandedProgress: SharedValue<number>;
   itinerary: ItineraryItem[];
 };
 
-function ExpandableDetailsComponent({ isExpanded, itinerary }: ExpandableDetailsProps) {
-  const expanded = useSharedValue(isExpanded ? 1 : 0);
-
-  useEffect(() => {
-    expanded.value = withTiming(isExpanded ? 1 : 0, { duration: 300 });
-  }, [expanded, isExpanded]);
-
+function ExpandableDetailsComponent({
+  isExpanded,
+  expandedProgress,
+  itinerary,
+}: ExpandableDetailsProps) {
   const animatedStyle = useAnimatedStyle(() => ({
-    height: interpolate(expanded.value, [0, 1], [0, layout.itinerarySectionHeight]),
-    opacity: expanded.value,
+    height: interpolate(expandedProgress.value, [0, 1], [0, layout.itinerarySectionHeight]),
+    opacity: expandedProgress.value,
     overflow: 'hidden' as const,
   }));
 
   return (
     <Animated.View style={animatedStyle}>
-      <ItineraryList items={itinerary} />
+      {isExpanded ? <ItineraryList items={itinerary} /> : null}
     </Animated.View>
   );
 }

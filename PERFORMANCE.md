@@ -2,64 +2,104 @@
 
 ## Measurement Methodology
 
-### FPS Tracking (`useFpsTracker`)
+### Metric Summary
 
-The custom FPS tracker uses `requestAnimationFrame` synchronized with `performance.now()`:
+| Metric | Source | Thread | Update Rate | Notes |
+|--------|--------|--------|-------------|-------|
+| UI FPS (compositor) | `timeSincePreviousFrame` via `useFrameCallback` | Native UI | Display ~2Hz (500ms EMA) | Compositor frame pacing |
+| JS FPS (event loop) | JS rAF delta, auto-calibrated ×1 or ×2 | JS | Display ~2Hz (500ms EMA) | Event loop cadence, not compositor |
+| Session Drops | `frameTime > 22.2ms` | Native UI | 1Hz store sync | Cumulative since overlay open |
+| P50 / P95 / Worst | Last 60 frame times | Native UI → JS | 1Hz | ~1 second rolling window |
+| JS Scheduling | setInterval→rAF drift > 50ms | JS | 10Hz probe | Scheduling heuristic, not a profiler |
 
-1. Each animation frame records `frameTime = now - lastTimestamp`
-2. FPS is calculated as `1000 / frameTime`
-3. Frame times are stored in a **fixed-size circular buffer** (300 samples)
-4. Live FPS updates every frame via Zustand
-5. Percentile statistics (P50, P95, worst) are computed every **1 second** — not every frame
+### UI FPS (Native Compositor)
 
-### Sampling Frequency
+UI frame metrics use Reanimated `useFrameCallback` on the native UI thread:
 
-| Metric | Frequency |
-|--------|-----------|
-| FPS | Every frame (~60Hz) |
-| Frame drops | Every frame (when threshold exceeded) |
-| P50 / P95 / Worst | Every 1 second |
-| JS thread status | Every 100ms |
+1. Each frame provides `timeSincePreviousFrame` from Reanimated's UI worklet frame registry
+2. Frame time is EMA-smoothed (α=0.08)
+3. Display updates at most every **500ms** with ±1 FPS hysteresis
+4. Formula: `uiFps = round(1000 / emaFrameTimeMs)`
 
-### FPS Calculation
+Instantaneous per-frame FPS is never shown — normal 60Hz jitter would flicker 58–62.
 
-```
-frameTimeMs = currentTimestamp - previousTimestamp
-fps = round(1000 / frameTimeMs)
-```
+### JS FPS (Event Loop Cadence)
+
+JS FPS measures the delta between consecutive JS `requestAnimationFrame` callbacks:
+
+1. Sampled every 32ms, EMA-smoothed (α=0.08)
+2. Display refreshed at most every 500ms with ±1 FPS hysteresis
+3. **Auto-calibration**: After 500ms warmup, compares average JS rAF delta to UI frame time over 20 samples. If `avg(jsDelta / uiFrameTime) >= 1.35`, applies Reanimated-style **×2 multiplier** (RN JS rAF often fires every other display frame)
+4. Written to a `SharedValue` — zero React re-renders
+
+### Warmup Exclusion
+
+The first **500ms** after opening the overlay is excluded from:
+
+- Frame drop counting
+- Percentile buffer samples
+- JS FPS calibration
+
+This reduces skew from overlay mount/layout and instrumentation startup.
+
+### Observer Effect
+
+When the overlay is visible, the measurer itself consumes CPU (frame callback, JS rAF probe, animated metric text). The overlay displays: *"Metrics include dev overlay overhead"*. Use metrics for **relative comparisons** (before/after changes), not absolute production baselines.
+
+### Instrumentation Lifecycle
+
+Tracking runs **only when the dev overlay is visible**.
+
+When overlay is off:
+
+- No `useFrameCallback`
+- No JS rAF probe
+- No JS scheduling interval
+- No Zustand metric writes
 
 ### Frame Drop Detection
 
-A frame drop is counted when either condition is true:
+A frame drop is counted when:
 
-- `fps < 45`
 - `frameTime > 22.2ms` (exceeds ~45fps budget)
 
-### JS Thread Lag Detection (`useJsLagDetector`)
+Drops accumulate as **Session Drops** (cumulative since overlay opened) and sync to Zustand at 1Hz.
 
-Every 100ms, a timer records `performance.now()` and schedules a `requestAnimationFrame` callback. The drift between scheduled time and actual execution indicates JS thread congestion:
+### JS Scheduling Detection
+
+Every 100ms (overlay visible only):
+
+1. `setInterval` records `performance.now()`
+2. Schedules `requestAnimationFrame`
+3. Measures drift between scheduled time and rAF execution
 
 - Drift `> 50ms` → **JS Busy**
 - Otherwise → **Healthy**
 
+This detects **event loop scheduling delay**, not synchronous JS blocking during a frame. Label: **JS Scheduling**.
+
 ### Percentile Calculation
 
-Frame time percentiles use **quickselect** on a snapshot of the circular buffer once per second. This avoids expensive full sorts on every frame.
+Every 1 second, the last **60 frame times** (~1 second at 60Hz) are snapshotted from the rolling buffer. Percentiles use **quickselect** on the JS thread — O(n) per second, not per frame.
+
+---
+
+## Previous Issues (Fixed)
+
+| Issue | Fix |
+|-------|-----|
+| rAF + Zustand 60/sec caused self-inflicted jank | Native UI frame callback + SharedValue display |
+| P50/P95 used 5-second buffer | Last 60 frames only (~1s window) |
+| JS FPS read ~30 while UI read ~60 | Auto-calibrated ×2 when rAF cadence is half display rate |
+| Warmup frames skewed drops/percentiles | 500ms exclusion after overlay open |
+| FPS display flickered on idle | EMA + 500ms throttle + hysteresis |
+| PERFORMANCE.md out of sync | Rewritten to match implementation |
 
 ---
 
 ## Bottleneck Case Study
 
 ### Before: Parent-Held Expansion State
-
-When card expansion state lived in the parent `TravelFeedList` component (e.g., `expandedId` in parent state), expanding any card triggered:
-
-1. Parent state update
-2. Full `TravelFeedList` rerender
-3. All visible `TravelCard` components re-evaluated (even with memo, prop references changed)
-4. FlashList layout recalculation
-
-**Sample metrics (scrolling + expand/collapse):**
 
 | Metric | Before |
 |--------|--------|
@@ -68,19 +108,10 @@ When card expansion state lived in the parent `TravelFeedList` component (e.g., 
 | P50 Frame Time | ~23ms |
 | P95 Frame Time | ~38ms |
 
-### After: Local Card State + React.memo
-
-Expansion state moved to each card via `useRecyclingState(false, [item.id])`:
-
-1. Toggle updates only the individual card
-2. Parent list does not rerender
-3. Reanimated `useSharedValue` + `withTiming` runs on UI thread
-4. FlashList maintains stable item references
-
-**Sample metrics (scrolling + expand/collapse):**
+### After: Local Card State + UI-Thread Animation
 
 | Metric | After |
-|--------|-------|
+|--------|--------|
 | FPS | ~58 |
 | Frame Drops | Minimal during expand |
 | P50 Frame Time | ~16ms |
@@ -88,48 +119,35 @@ Expansion state moved to each card via `useRecyclingState(false, [item.id])`:
 
 ---
 
-## Metrics Placeholders
+## Validation Checklist
 
-Fill in after profiling on your target device:
-
-| Metric | Value |
-|--------|-------|
-| P50 | ___ms |
-| P95 | ___ms |
-| Worst Frame | ___ms |
+| Scenario | Expected |
+|----------|----------|
+| Overlay off | Zero metric store activity |
+| Idle + overlay on (after warmup) | UI FPS stable ~60 (or ~120 ProMotion), JS FPS comparable |
+| Fast scroll feed | UI FPS dips, P95 rises, session drops increment |
+| Chat streaming | JS Scheduling may flip; UI FPS stays higher than JS FPS under load |
 
 ---
 
 ## Tradeoffs
 
+### Native Performance Overlay
+
+**Decision**: UI/JS FPS via SharedValues + animated props; Zustand only for 1Hz percentiles and session drops.
+
+**Benefit**: Overlay measures without becoming the primary jank source.
+
+**Cost**: More complex than React state; metrics include overlay overhead.
+
 ### Image Caching (expo-image)
 
-**Decision**: Use `cachePolicy="memory-disk"` with blurhash placeholders for all remote images.
+**Benefit**: Smoother scrolling with disk+memory cache.
 
-**Benefit**: Smoother scrolling — images load from cache on revisit, placeholders prevent layout shift.
-
-**Cost**: Higher memory footprint from disk + memory cache. On memory-constrained devices, monitor with the performance overlay.
+**Cost**: Higher memory footprint.
 
 ### Zustand Store Isolation
 
-**Decision**: Three separate stores (Feed, Chat, Performance) instead of one global store.
+**Benefit**: Chat/performance updates never trigger feed rerenders.
 
-**Benefit**: Chat message updates and overlay metric updates never trigger feed rerenders.
-
-**Cost**: Slightly more boilerplate for cross-feature coordination (solved via ref-based sheet control at root layout).
-
-### Always-Mounted Bottom Sheet
-
-**Decision**: Chat bottom sheet stays mounted with `index={-1}`; open/close via ref.
-
-**Benefit**: Chat history preserved, zero feed rerenders on open/close, no mount/unmount jank.
-
-**Cost**: Small persistent memory for the sheet component tree even when closed.
-
-### Performance Overlay CPU
-
-**Decision**: Overlay UI only renders when visible; FPS/JS trackers run independently.
-
-**Benefit**: Measurements continue when overlay is hidden; minimal React reconciliation cost when hidden.
-
-**Cost**: rAF loop and 100ms interval still consume minimal CPU in development.
+**Cost**: Slightly more coordination boilerplate at root layout.

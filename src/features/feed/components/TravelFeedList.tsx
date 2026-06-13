@@ -1,6 +1,6 @@
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { memo, useCallback } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { TravelCard } from '@/features/feed/components/TravelCard';
 import type { TravelBundle } from '@/features/feed/types/travelBundle';
@@ -24,6 +24,8 @@ function TravelFeedListComponent({ bundles }: TravelFeedListProps) {
     renderItem,
     keyExtractor,
     estimatedItemSize: layout.collapsedCardHeight,
+    drawDistance: layout.collapsedCardHeight * 2,
+    removeClippedSubviews: Platform.OS === 'android',
     contentContainerStyle: styles.content,
     showsVerticalScrollIndicator: false,
   };

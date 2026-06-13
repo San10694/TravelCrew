@@ -3,6 +3,9 @@ import { useCallback, useRef } from 'react';
 import { getMockAssistantResponse, tokenizeResponse } from '@/features/chat/data/mockResponses';
 import { useChatStore } from '@/features/chat/store/chatStore';
 
+const BATCH_INTERVAL_MS = 32;
+const BATCH_CHAR_THRESHOLD = 4;
+
 type StreamControls = {
   cancel: () => void;
 };
@@ -12,7 +15,7 @@ export function useStreamingResponse(): {
 } {
   const addUserMessage = useChatStore((state) => state.addUserMessage);
   const startAssistantResponse = useChatStore((state) => state.startAssistantResponse);
-  const appendToken = useChatStore((state) => state.appendToken);
+  const appendTokenBatch = useChatStore((state) => state.appendTokenBatch);
   const finishStreaming = useChatStore((state) => state.finishStreaming);
   const setThinking = useChatStore((state) => state.setThinking);
 
@@ -37,45 +40,87 @@ export function useStreamingResponse(): {
       const messageId = `assistant-${Date.now()}`;
       const tokens = tokenizeResponse(getMockAssistantResponse());
       let tokenIndex = 0;
-      let rafId: number | null = null;
+      let pendingChunk = '';
+      let lastFlushAt = 0;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
       let isCancelled = false;
+      let hasStarted = false;
 
-      const streamNextToken = () => {
+      const flushChunk = () => {
+        if (pendingChunk.length === 0) {
+          return;
+        }
+
+        appendTokenBatch(messageId, pendingChunk);
+        pendingChunk = '';
+        lastFlushAt = Date.now();
+      };
+
+      const scheduleFlush = () => {
+        if (timeoutId !== null) {
+          return;
+        }
+
+        const elapsed = Date.now() - lastFlushAt;
+        const delay = Math.max(0, BATCH_INTERVAL_MS - elapsed);
+
+        timeoutId = setTimeout(() => {
+          timeoutId = null;
+          flushChunk();
+
+          if (tokenIndex < tokens.length && !isCancelled) {
+            scheduleNextToken();
+          }
+        }, delay);
+      };
+
+      const scheduleNextToken = () => {
         if (isCancelled) {
           return;
         }
 
-        if (tokenIndex === 0) {
+        if (!hasStarted) {
+          hasStarted = true;
           startAssistantResponse(messageId);
           setThinking(false);
+          lastFlushAt = Date.now();
         }
 
         if (tokenIndex >= tokens.length) {
+          flushChunk();
           finishStreaming();
           streamRef.current = null;
           return;
         }
 
-        appendToken(messageId, tokens[tokenIndex] ?? '');
+        pendingChunk += tokens[tokenIndex] ?? '';
         tokenIndex += 1;
-        rafId = requestAnimationFrame(streamNextToken);
+
+        if (pendingChunk.length >= BATCH_CHAR_THRESHOLD) {
+          flushChunk();
+          scheduleNextToken();
+          return;
+        }
+
+        scheduleFlush();
       };
 
       streamRef.current = {
         cancel: () => {
           isCancelled = true;
-          if (rafId !== null) {
-            cancelAnimationFrame(rafId);
+          if (timeoutId !== null) {
+            clearTimeout(timeoutId);
           }
+          flushChunk();
           finishStreaming();
         },
       };
 
-      rafId = requestAnimationFrame(streamNextToken);
+      scheduleNextToken();
     },
     [
       addUserMessage,
-      appendToken,
+      appendTokenBatch,
       cancelActiveStream,
       finishStreaming,
       setThinking,

@@ -1,6 +1,7 @@
 import { useRecyclingState } from '@shopify/flash-list';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { ExpandableDetails } from '@/features/feed/components/ExpandableDetails';
 import { TravelCardHero } from '@/features/feed/components/TravelCardHero';
@@ -8,20 +9,26 @@ import type { TravelBundle } from '@/features/feed/types/travelBundle';
 import { Badge } from '@/features/shared/ui/Badge';
 import { Rating } from '@/features/shared/ui/Rating';
 import { colors, spacing, typography } from '@/features/shared/constants/theme';
-import { useRerenderLogger } from '@/features/shared/utils/rerenderLogger';
 
 type TravelCardProps = {
   bundle: TravelBundle;
 };
 
 function TravelCardComponent({ bundle }: TravelCardProps) {
-  useRerenderLogger(`TravelCard:${bundle.id}`);
-
   const [isExpanded, setIsExpanded] = useRecyclingState(false, [bundle.id]);
+  const expandedProgress = useSharedValue(0);
+
+  useEffect(() => {
+    expandedProgress.value = 0;
+  }, [bundle.id, expandedProgress]);
 
   const toggleExpanded = useCallback(() => {
-    setIsExpanded((current) => !current);
-  }, [setIsExpanded]);
+    setIsExpanded((current) => {
+      const nextExpanded = !current;
+      expandedProgress.value = withTiming(nextExpanded ? 1 : 0, { duration: 300 });
+      return nextExpanded;
+    });
+  }, [expandedProgress, setIsExpanded]);
 
   return (
     <View style={styles.card}>
@@ -47,7 +54,11 @@ function TravelCardComponent({ bundle }: TravelCardProps) {
         </Pressable>
       </View>
 
-      <ExpandableDetails isExpanded={isExpanded} itinerary={bundle.itinerary} />
+      <ExpandableDetails
+        isExpanded={isExpanded}
+        expandedProgress={expandedProgress}
+        itinerary={bundle.itinerary}
+      />
     </View>
   );
 }
