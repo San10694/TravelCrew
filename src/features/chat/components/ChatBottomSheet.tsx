@@ -16,14 +16,21 @@ import { StyleSheet } from 'react-native';
 
 import { ChatMessageList } from '@/features/chat/components/ChatMessageList';
 import { ChatSheetFooter } from '@/features/chat/components/ChatSheetFooter';
-import { colors } from '@/features/shared/constants/theme';
+import { colors, radii, shadows } from '@/features/shared/constants/theme';
 
 export type ChatBottomSheetRef = {
   open: () => void;
   close: () => void;
 };
 
-function ChatBottomSheetComponent(_: object, ref: Ref<ChatBottomSheetRef>) {
+type ChatBottomSheetProps = {
+  onOpenChange?: (isOpen: boolean) => void;
+};
+
+function ChatBottomSheetComponent(
+  { onOpenChange }: ChatBottomSheetProps,
+  ref: Ref<ChatBottomSheetRef>,
+) {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => ['50%', '92%'], []);
@@ -40,7 +47,7 @@ function ChatBottomSheetComponent(_: object, ref: Ref<ChatBottomSheetRef>) {
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.45} />
+      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
     ),
     [],
   );
@@ -48,6 +55,13 @@ function ChatBottomSheetComponent(_: object, ref: Ref<ChatBottomSheetRef>) {
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => <ChatSheetFooter {...props} />,
     [],
+  );
+
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      onOpenChange?.(index >= 0);
+    },
+    [onOpenChange],
   );
 
   return (
@@ -59,6 +73,7 @@ function ChatBottomSheetComponent(_: object, ref: Ref<ChatBottomSheetRef>) {
       enablePanDownToClose
       keyboardBehavior="interactive"
       android_keyboardInputMode="adjustResize"
+      onChange={handleSheetChange}
       backdropComponent={renderBackdrop}
       footerComponent={renderFooter}
       backgroundStyle={styles.sheetBackground}
@@ -74,7 +89,7 @@ export const ChatBottomSheet = memo(forwardRef(ChatBottomSheetComponent));
 
 const styles = StyleSheet.create({
   handle: {
-    backgroundColor: colors.border,
+    backgroundColor: colors.textMuted,
     width: 40,
   },
   sheet: {
@@ -82,7 +97,8 @@ const styles = StyleSheet.create({
   },
   sheetBackground: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    ...shadows.sheet,
   },
 });

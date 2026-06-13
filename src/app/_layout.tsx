@@ -1,7 +1,15 @@
 import 'react-native-gesture-handler';
 
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  useFonts,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { Slot } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -16,6 +24,8 @@ import { DevOverlayToggle } from '@/features/performance/components/DevOverlayTo
 import { PerformanceOverlay } from '@/features/performance/components/PerformanceOverlay';
 import { usePerformanceInstrumentation } from '@/features/performance/hooks/usePerformanceInstrumentation';
 
+SplashScreen.preventAutoHideAsync();
+
 function PerformanceInstrumentation() {
   usePerformanceInstrumentation();
   return null;
@@ -23,10 +33,28 @@ function PerformanceInstrumentation() {
 
 export default function RootLayout() {
   const chatSheetRef = useRef<ChatBottomSheetRef>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+  });
 
   const openChat = useCallback(() => {
     chatSheetRef.current?.open();
   }, []);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -35,8 +63,8 @@ export default function RootLayout() {
           <PerformanceInstrumentation />
           <Slot />
           <View style={styles.overlay} pointerEvents="box-none">
-            <FeedFab onPress={openChat} />
-            <ChatBottomSheet ref={chatSheetRef} />
+            <FeedFab onPress={openChat} visible={!isChatOpen} />
+            <ChatBottomSheet ref={chatSheetRef} onOpenChange={setIsChatOpen} />
             {__DEV__ ? (
               <>
                 <DevOverlayToggle />

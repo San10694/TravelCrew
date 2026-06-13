@@ -1,8 +1,16 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { memo, useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing, typography } from '@/features/shared/constants/theme';
+import {
+  colors,
+  fontFamily,
+  layout,
+  radii,
+  shadows,
+  spacing,
+  typography,
+} from '@/features/shared/constants/theme';
 
 type ChatInputProps = {
   onSend: (message: string) => void;
@@ -24,22 +32,30 @@ function ChatInputComponent({ onSend, disabled = false }: ChatInputProps) {
 
   return (
     <View style={styles.container}>
-      <BottomSheetTextInput
-        value={value}
-        onChangeText={setValue}
-        placeholder="Ask about destinations, budgets, or trip types..."
-        placeholderTextColor={colors.textSecondary}
-        style={styles.input}
-        multiline
-        editable={!disabled}
-      />
-      <Pressable
-        onPress={handleSend}
-        style={[styles.sendButton, disabled && styles.sendButtonDisabled]}
-        disabled={disabled}
-      >
-        <Text style={styles.sendLabel}>Send</Text>
-      </Pressable>
+      <View style={styles.composer}>
+        <BottomSheetTextInput
+          value={value}
+          onChangeText={setValue}
+          placeholder="Ask about destinations, budgets, or trip types..."
+          placeholderTextColor={colors.textMuted}
+          style={styles.input}
+          multiline
+          editable={!disabled}
+          textAlignVertical="center"
+        />
+        <Pressable
+          onPress={handleSend}
+          style={({ pressed }) => [
+            styles.sendButton,
+            disabled && styles.sendButtonDisabled,
+            pressed && styles.sendButtonPressed,
+          ]}
+          disabled={disabled}
+          accessibilityLabel="Send message"
+        >
+          <Text style={styles.sendIcon}>↑</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -47,40 +63,50 @@ function ChatInputComponent({ onSend, disabled = false }: ChatInputProps) {
 export const ChatInput = memo(ChatInputComponent);
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'flex-end',
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
+  composer: {
+    alignItems: 'center',
+    backgroundColor: colors.inputBackground,
+    borderRadius: radii.pill,
     flexDirection: 'row',
     gap: spacing.sm,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
+    paddingVertical: spacing.xs,
+    ...shadows.input,
+  },
+  container: {
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   input: {
-    backgroundColor: colors.background,
-    borderColor: colors.border,
-    borderRadius: 12,
-    borderWidth: 1,
     color: colors.text,
     flex: 1,
+    fontFamily: fontFamily.regular,
     fontSize: typography.body,
     maxHeight: 100,
-    minHeight: 44,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
+    minHeight: layout.inputHeight - spacing.sm,
+    paddingVertical: Platform.OS === 'ios' ? spacing.sm : spacing.xs,
   },
   sendButton: {
+    alignItems: 'center',
     backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    height: layout.inputHeight,
+    justifyContent: 'center',
+    width: layout.inputHeight,
   },
   sendButtonDisabled: {
     opacity: 0.5,
   },
-  sendLabel: {
+  sendButtonPressed: {
+    opacity: 0.85,
+  },
+  sendIcon: {
     color: colors.surface,
-    fontSize: typography.body,
-    fontWeight: '600',
+    fontFamily: fontFamily.bold,
+    fontSize: 18,
+    lineHeight: 20,
   },
 });

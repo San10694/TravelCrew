@@ -1,24 +1,39 @@
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { memo, useCallback } from 'react';
-import { ListRenderItemInfo, StyleSheet, Text, View } from 'react-native';
+import { ListRenderItemInfo, StyleSheet, View } from 'react-native';
 
+import { ChatEmptyState } from '@/features/chat/components/ChatEmptyState';
 import { ChatMessageBubble } from '@/features/chat/components/ChatMessageBubble';
 import { TypingIndicator } from '@/features/chat/components/TypingIndicator';
+import { useStreamingResponse } from '@/features/chat/hooks/useStreamingResponse';
 import { useChatStore } from '@/features/chat/store/chatStore';
 import type { Message } from '@/features/chat/types/message';
-import { colors, spacing, typography } from '@/features/shared/constants/theme';
+import { AppText } from '@/features/shared/ui/AppText';
+import { colors, fontFamily, radii, spacing } from '@/features/shared/constants/theme';
 
 function ChatListHeader() {
   return (
     <View style={styles.header}>
-      <Text style={styles.title}>Ask Crew</Text>
-      <Text style={styles.subtitle}>Your AI travel assistant</Text>
+      <View style={styles.avatar}>
+        <AppText variant="subtitle" color={colors.primary}>
+          C
+        </AppText>
+      </View>
+      <View style={styles.headerText}>
+        <AppText variant="subtitle" style={styles.title}>
+          Ask Crew
+        </AppText>
+        <AppText variant="caption" color={colors.textSecondary}>
+          Your AI travel assistant
+        </AppText>
+      </View>
     </View>
   );
 }
 
 function ChatMessageListComponent() {
   const messages = useChatStore((state) => state.messages);
+  const { sendMessage } = useStreamingResponse();
 
   const keyExtractor = useCallback((item: Message) => item.id, []);
 
@@ -31,14 +46,23 @@ function ChatMessageListComponent() {
 
   const renderListFooter = useCallback(() => <TypingIndicator />, []);
 
+  const renderEmpty = useCallback(
+    () => <ChatEmptyState onSuggestionPress={sendMessage} />,
+    [sendMessage],
+  );
+
   return (
     <BottomSheetFlatList
       data={messages}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
-      ListHeaderComponent={renderListHeader}
+      ListHeaderComponent={messages.length > 0 ? renderListHeader : null}
+      ListEmptyComponent={renderEmpty}
       ListFooterComponent={renderListFooter}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        messages.length === 0 && styles.emptyContent,
+      ]}
       keyboardShouldPersistTaps="handled"
     />
   );
@@ -47,25 +71,32 @@ function ChatMessageListComponent() {
 export const ChatMessageList = memo(ChatMessageListComponent);
 
 const styles = StyleSheet.create({
+  avatar: {
+    alignItems: 'center',
+    backgroundColor: colors.primarySoft,
+    borderRadius: radii.pill,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
   content: {
     paddingBottom: spacing.sm,
     paddingHorizontal: spacing.md,
   },
+  emptyContent: {
+    flexGrow: 1,
+  },
   header: {
-    borderBottomColor: colors.border,
-    borderBottomWidth: 1,
-    marginBottom: spacing.sm,
-    paddingBottom: spacing.sm,
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
     paddingTop: spacing.xs,
   },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: typography.body,
-    marginTop: spacing.xs,
+  headerText: {
+    flex: 1,
   },
   title: {
-    color: colors.text,
-    fontSize: typography.subtitle,
-    fontWeight: '700',
+    fontFamily: fontFamily.bold,
   },
 });

@@ -1,14 +1,15 @@
 import { useRecyclingState } from '@shopify/flash-list';
 import { memo, useCallback, useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { ExpandableDetails } from '@/features/feed/components/ExpandableDetails';
 import { TravelCardHero } from '@/features/feed/components/TravelCardHero';
 import type { TravelBundle } from '@/features/feed/types/travelBundle';
+import { AppText } from '@/features/shared/ui/AppText';
 import { Badge } from '@/features/shared/ui/Badge';
-import { Rating } from '@/features/shared/ui/Rating';
-import { colors, spacing, typography } from '@/features/shared/constants/theme';
+import { PillButton } from '@/features/shared/ui/PillButton';
+import { colors, fontFamily, radii, shadows, spacing } from '@/features/shared/constants/theme';
 
 type TravelCardProps = {
   bundle: TravelBundle;
@@ -32,26 +33,30 @@ function TravelCardComponent({ bundle }: TravelCardProps) {
 
   return (
     <View style={styles.card}>
-      <TravelCardHero imageUrl={bundle.heroImage} blurhash={bundle.heroBlurhash} />
+      <TravelCardHero
+        imageUrl={bundle.heroImage}
+        blurhash={bundle.heroBlurhash}
+        destination={bundle.destination}
+        rating={bundle.rating}
+      />
 
       <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <Text style={styles.destination}>{bundle.destination}</Text>
-          <Rating value={bundle.rating} />
-        </View>
-
         <Badge label={bundle.tripType} />
 
         <View style={styles.metaRow}>
-          <Text style={styles.price}>${bundle.price.toLocaleString()}</Text>
-          <Text style={styles.duration}>{bundle.duration}</Text>
+          <AppText variant="heading" color={colors.text} style={styles.price}>
+            ${bundle.price.toLocaleString()}
+          </AppText>
+          <AppText variant="body" color={colors.textSecondary}>
+            {bundle.duration}
+          </AppText>
         </View>
 
-        <Pressable onPress={toggleExpanded} style={styles.toggleButton}>
-          <Text style={styles.toggleText}>
-            {isExpanded ? 'Hide itinerary' : 'View itinerary'}
-          </Text>
-        </Pressable>
+        <PillButton
+          label={isExpanded ? 'Hide itinerary' : 'View itinerary'}
+          onPress={toggleExpanded}
+          variant="outline"
+        />
       </View>
 
       <ExpandableDetails
@@ -69,47 +74,22 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
     marginBottom: spacing.md,
     overflow: 'hidden',
+    ...shadows.card,
   },
   content: {
     gap: spacing.sm,
     padding: spacing.md,
   },
-  destination: {
-    color: colors.text,
-    flex: 1,
-    fontSize: typography.subtitle,
-    fontWeight: '700',
-  },
-  duration: {
-    color: colors.textSecondary,
-    fontSize: typography.body,
-  },
-  headerRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
   metaRow: {
-    alignItems: 'center',
+    alignItems: 'baseline',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   price: {
-    color: colors.primary,
-    fontSize: typography.title,
-    fontWeight: '700',
-  },
-  toggleButton: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
-  },
-  toggleText: {
-    color: colors.primary,
-    fontSize: typography.body,
-    fontWeight: '600',
+    fontFamily: fontFamily.bold,
   },
 });

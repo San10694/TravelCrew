@@ -9,7 +9,7 @@ import {
   StaticMetricText,
 } from '@/features/performance/components/NativeMetricText';
 import { usePerformanceStore } from '@/features/performance/store/performanceStore';
-import { colors, spacing, typography } from '@/features/shared/constants/theme';
+import { colors, fontFamily, spacing, typography } from '@/features/shared/constants/theme';
 
 function PercentileMetrics() {
   const p50FrameTime = usePerformanceStore((state) => state.p50FrameTime);
@@ -82,8 +82,9 @@ export const PerformanceOverlay = memo(PerformanceOverlayComponent);
 
 const styles = StyleSheet.create({
   note: {
-    color: '#CBD5E1',
-    fontSize: typography.caption - 1,
+    color: colors.textMuted,
+    fontFamily: fontFamily.regular,
+    fontSize: typography.caption,
     marginBottom: spacing.sm,
   },
   overlay: {
@@ -98,8 +99,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.surface,
+    fontFamily: fontFamily.bold,
     fontSize: typography.subtitle,
-    fontWeight: '700',
     marginBottom: spacing.xs,
   },
 });

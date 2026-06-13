@@ -6,7 +6,7 @@ import Animated, {
   useDerivedValue,
 } from 'react-native-reanimated';
 
-import { colors, typography } from '@/features/shared/constants/theme';
+import { colors, fontFamily, typography } from '@/features/shared/constants/theme';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -84,6 +84,7 @@ export const DerivedMetricText = memo(DerivedMetricTextComponent);
 const styles = StyleSheet.create({
   metric: {
     color: colors.surface,
+    fontFamily: fontFamily.medium,
     fontSize: typography.caption,
     fontVariant: ['tabular-nums'],
     marginBottom: 4,

@@ -4,7 +4,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { ItineraryRow } from '@/features/feed/components/ItineraryRow';
 import type { ItineraryItem } from '@/features/feed/types/travelBundle';
-import { layout, spacing } from '@/features/shared/constants/theme';
+import { AppText } from '@/features/shared/ui/AppText';
+import { colors, layout, spacing } from '@/features/shared/constants/theme';
 import type { FlashListPropsWithEstimate } from '@/features/shared/utils/flashListProps';
 
 type ItineraryListProps = {
@@ -31,6 +32,9 @@ function ItineraryListComponent({ items }: ItineraryListProps) {
 
   return (
     <View style={styles.container}>
+      <AppText variant="caption" color={colors.textSecondary} style={styles.sectionLabel}>
+        Itinerary
+      </AppText>
       <FlashList {...listProps} />
     </View>
   );
@@ -44,6 +48,11 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  sectionLabel: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    textTransform: 'uppercase',
   },
 });

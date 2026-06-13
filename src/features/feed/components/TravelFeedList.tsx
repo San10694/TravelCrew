@@ -9,9 +9,13 @@ import type { FlashListPropsWithEstimate } from '@/features/shared/utils/flashLi
 
 type TravelFeedListProps = {
   bundles: TravelBundle[];
+  contentBottomPadding?: number;
 };
 
-function TravelFeedListComponent({ bundles }: TravelFeedListProps) {
+function TravelFeedListComponent({
+  bundles,
+  contentBottomPadding = 0,
+}: TravelFeedListProps) {
   const keyExtractor = useCallback((item: TravelBundle) => item.id, []);
 
   const renderItem = useCallback(
@@ -26,7 +30,7 @@ function TravelFeedListComponent({ bundles }: TravelFeedListProps) {
     estimatedItemSize: layout.collapsedCardHeight,
     drawDistance: layout.collapsedCardHeight * 2,
     removeClippedSubviews: Platform.OS === 'android',
-    contentContainerStyle: styles.content,
+    contentContainerStyle: [styles.content, { paddingBottom: contentBottomPadding }],
     showsVerticalScrollIndicator: false,
   };
 

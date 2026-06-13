@@ -1,9 +1,10 @@
 import { Image } from 'expo-image';
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import type { ItineraryItem } from '@/features/feed/types/travelBundle';
-import { colors, layout, spacing, typography } from '@/features/shared/constants/theme';
+import { AppText } from '@/features/shared/ui/AppText';
+import { colors, layout, radii, spacing } from '@/features/shared/constants/theme';
 
 type ItineraryRowProps = {
   item: ItineraryItem;
@@ -20,10 +21,12 @@ function ItineraryRowComponent({ item }: ItineraryRowProps) {
         cachePolicy="memory-disk"
         transition={150}
       />
-      <Text style={styles.day}>Day {item.day}</Text>
-      <Text style={styles.title} numberOfLines={1}>
+      <AppText variant="caption" color={colors.textSecondary} style={styles.day}>
+        Day {item.day}
+      </AppText>
+      <AppText variant="body" numberOfLines={1} style={styles.title}>
         {item.title}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -36,19 +39,14 @@ const styles = StyleSheet.create({
     width: layout.itineraryImageWidth,
   },
   day: {
-    color: colors.textSecondary,
-    fontSize: typography.caption,
     marginTop: spacing.xs,
   },
   image: {
-    borderRadius: 10,
+    borderRadius: radii.md,
     height: layout.itineraryImageHeight,
     width: layout.itineraryImageWidth,
   },
   title: {
-    color: colors.text,
-    fontSize: typography.body,
-    fontWeight: '600',
     marginTop: 2,
   },
 });
