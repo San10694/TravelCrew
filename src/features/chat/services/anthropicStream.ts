@@ -5,7 +5,7 @@ const ANTHROPIC_VERSION = '2023-06-01';
 const ANTHROPIC_MODEL = 'claude-3-5-haiku-20241022';
 
 const SYSTEM_PROMPT =
-  'You are Crew, a concise AI travel assistant. Help users discover trip bundles, compare destinations, budgets, and trip types. Keep answers practical and friendly.';
+  'You are Travel Crew, a concise AI travel assistant. Help users discover trip bundles, compare destinations, budgets, and trip types. Keep answers practical and friendly.';
 
 export function getAnthropicApiKey(): string | undefined {
   const key = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY?.trim();

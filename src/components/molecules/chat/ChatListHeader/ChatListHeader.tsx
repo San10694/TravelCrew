@@ -7,10 +7,10 @@ import { colors, fontFamily, spacing } from '@/features/shared/constants/theme';
 export function ChatListHeader() {
   return (
     <View style={styles.header}>
-      <AvatarIcon label="C" size="sm" />
+      <AvatarIcon label="TC" size="sm" />
       <View style={styles.headerText}>
         <AppText variant="subtitle" style={styles.title}>
-          Ask Crew
+          Travel Crew
         </AppText>
         <AppText variant="caption" color={colors.textSecondary}>
           Your AI travel assistant

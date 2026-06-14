@@ -1,4 +1,4 @@
-# Crew — Travel Discovery App
+# Travel Crew — Travel Discovery App
 
 A production-quality React Native travel discovery application built with Expo, featuring a high-performance feed, AI chat bottom sheet, and custom performance overlay.
 
@@ -15,7 +15,7 @@ A production-quality React Native travel discovery application built with Expo, 
 # Install dependencies
 npm install
 
-# Optional: enable live Anthropic streaming for Ask Crew
+# Optional: enable live Anthropic streaming for Travel Crew AI chat
 cp .env.example .env
 # Add EXPO_PUBLIC_ANTHROPIC_API_KEY to .env
 
@@ -151,7 +151,7 @@ Tap the **Perf** button (bottom-left) in development to toggle the draggable ove
 
 Metrics include dev overlay overhead — use for **relative** before/after comparisons, not absolute production baselines. See [PERFORMANCE.md](PERFORMANCE.md) for full methodology.
 
-## Ask Crew (AI Chat Sheet)
+## Travel Crew AI Chat Sheet
 
 - Bottom sheet overlays the feed at **50% peek** and **92% full** snap points
 - Feed stays scrollable behind the sheet (non-blocking backdrop)

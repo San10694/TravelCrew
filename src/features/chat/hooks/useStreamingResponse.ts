@@ -207,8 +207,8 @@ export function useStreamingResponse(): {
 
         const fallbackMessage =
           error instanceof Error
-            ? `Sorry, I couldn't reach Crew right now. ${error.message}`
-            : 'Sorry, I could not reach Crew right now.';
+            ? `Sorry, I couldn't reach Travel Crew right now. ${error.message}`
+            : 'Sorry, I could not reach Travel Crew right now.';
 
         appendTokenBatch(messageId, fallbackMessage);
         finishStreaming();

@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "crew",
-    "slug": "crew",
+    "name": "Travel Crew",
+    "slug": "travel-crew",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "crew",
+    "scheme": "travelcrew",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.crew"
+      "bundleIdentifier": "com.anonymous.travelcrew"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +20,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.crew"
+      "package": "com.anonymous.travelcrew"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -8,7 +8,7 @@ type FeedFabProps = {
 
 export function FeedFab({ onPress, visible = true }: FeedFabProps) {
   return (
-    <AnimatedFab label="Ask Crew" icon="✦" onPress={onPress} visible={visible} />
+    <AnimatedFab label="Ask Travel Crew" icon="✦" onPress={onPress} visible={visible} />
   );
 }
 

@@ -116,7 +116,7 @@ First **500 ms** after overlay open excluded from drop counting and percentile s
 | Dev build idle | UI/JS start at 60, update within ~1 s; within ±1–2 of RN Perf Monitor |
 | ProMotion (120 Hz) | UI FPS ~120 when dev menu also shows ~120 |
 | Fast scroll | UI FPS dips, P95 rises, session drops increment |
-| Ask Crew streaming | JS FPS dips on load |
+| Travel Crew AI streaming | JS FPS dips on load |
 
 ---
 
