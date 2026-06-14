@@ -32,6 +32,7 @@ export function useAppShell(): AppShellViewModel {
   });
 
   const openChat = useCallback(() => {
+    setIsChatOpen(true);
     chatSheetRef.current?.open();
   }, []);
 

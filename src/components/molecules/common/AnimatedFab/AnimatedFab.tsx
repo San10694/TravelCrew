@@ -31,13 +31,22 @@ export function AnimatedFab({
 }: AnimatedFabProps) {
   const insets = useSafeAreaInsets();
   const opacity = useSharedValue(visible ? 1 : 0);
+  const translateY = useSharedValue(visible ? 0 : 8);
 
   useEffect(() => {
-    opacity.value = withTiming(visible ? 1 : 0, { duration: 200 });
-  }, [opacity, visible]);
+    if (visible) {
+      opacity.value = withTiming(1, { duration: 200 });
+      translateY.value = withTiming(0, { duration: 200 });
+      return;
+    }
+
+    opacity.value = 0;
+    translateY.value = 8;
+  }, [opacity, translateY, visible]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
   }));
 
   return (
