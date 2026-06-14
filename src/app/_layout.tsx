@@ -5,7 +5,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { AppOverlays } from '@/app/AppOverlays';
+import { AppOverlays } from '@/components/organisms/common/AppOverlays';
 import { PerformanceMetricsProvider } from '@/features/performance/context/PerformanceMetricsContext';
 import { usePerformanceInstrumentation } from '@/features/performance/hooks/usePerformanceInstrumentation';
 import { useAppShell } from '@/features/shared/hooks/useAppShell';

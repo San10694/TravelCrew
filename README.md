@@ -53,11 +53,22 @@ src/
 ├── app/                    # Expo Router routes only
 │   ├── _layout.tsx         # Root composition (providers + overlays)
 │   └── index.tsx           # Feed screen route
+├── components/             # Reusable UI (atomic design — no screens/)
+│   ├── atoms/              # AppText, Badge, PillButton, RemoteImage, …
+│   ├── molecules/
+│   │   ├── common/         # ScreenHeader, AvatarIcon, MessageBubble, AnimatedFab
+│   │   ├── feed/           # TravelCardHero, ItineraryRow, …
+│   │   ├── chat/           # ChatInput, ChatMessageBubble, …
+│   │   └── performance/    # NativeMetricText, StaticMetricText
+│   └── organisms/
+│       ├── feed/           # TravelFeedList, TravelCard, FeedFab, …
+│       ├── chat/           # ChatBottomSheet, ChatMessageList, …
+│       └── performance/    # PerformanceOverlay, DevOverlayToggle
 └── features/
-    ├── feed/               # Trip discovery feed
-    ├── chat/               # AI chat bottom sheet
-    ├── performance/        # Custom performance overlay
-    └── shared/             # UI primitives, utils, constants
+    ├── feed/               # screens/FeedScreen, hooks/, store/, repositories/, …
+    ├── chat/               # hooks/, store/, context/, services/, types/, data/
+    ├── performance/        # hooks/, store/, services/, context/
+    └── shared/             # constants, utils, hooks (useAppShell)
 ```
 
 ## Architecture Decisions
@@ -70,11 +81,11 @@ Layers map to existing folders — no `viewModels/` rename:
 |-------|--------|----------------|
 | **Model** | `store/`, `types/`, `data/`, `repositories/`, `services/` | Domain state + data acquisition |
 | **ViewModel** | `hooks/` | Store/service access, UI state, commands for views |
-| **View** | `components/` | Render + forward events — **never import `store/` or `services/`** |
+| **View** | `components/` (organisms, molecules, atoms) + `features/*/screens/` | Reusable UI + route surfaces — **never import `store/` or `services/`** |
 
-**Import boundary:** `components/` may import `hooks/`, `types/`, and `shared/` only. Hooks are the sole layer that subscribes to Zustand and calls repositories/services.
+**Import boundary:** Screens and organisms may import `hooks/`, `components/`, `types/`, and `shared/`. Hooks are the sole layer that subscribes to Zustand and calls repositories/services. Overlays (chat, perf HUD) are organisms — only full-route surfaces are screens. React Compiler auto-memoizes UI components — no manual `memo()` needed.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for per-feature data flow, the chat Provider pattern, and anti-patterns.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for atomic UI tiers, per-feature data flow, the chat Provider pattern, and anti-patterns.
 
 ### Sibling Composition at Root
 
@@ -105,13 +116,12 @@ Three isolated Zustand stores prevent cross-feature rerenders:
 ## Performance Strategy
 
 1. **FlashList v2** for vertical feed and horizontal itinerary lists
-2. **React.memo** on cards, itinerary rows, and overlay metric components
+2. **React Compiler** for automatic component and hook memoization (enabled via `experiments.reactCompiler`)
 3. **Local expansion state** via `useRecyclingState` — no parent list rerenders on expand/collapse
 4. **Reanimated shared values** for UI-thread expand/collapse animations
-5. **Stable callbacks** (`useCallback`) and key extractors
-6. **expo-image** with memory-disk cache and blurhash placeholders
-7. **Token streaming** batched via `setTimeout` (32ms / 4 chars) to limit Zustand updates during AI responses
-8. **Dev rerender logging** via `useRerenderLogger` (development only)
+5. **expo-image** with memory-disk cache and blurhash placeholders
+6. **Token streaming** batched via `setTimeout` (32ms / 4 chars) to limit Zustand updates during AI responses
+7. **Dev rerender logging** via `useRerenderLogger` (development only)
 
 ## Development Tooling
 

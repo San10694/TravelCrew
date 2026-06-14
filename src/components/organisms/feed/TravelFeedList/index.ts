@@ -1,0 +1,1 @@
+export { TravelFeedList } from './TravelFeedList';

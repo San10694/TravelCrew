@@ -1,0 +1,1 @@
+export { ExpandableDetails } from './ExpandableDetails';

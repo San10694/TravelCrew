@@ -102,7 +102,7 @@ First **500 ms** after overlay open excluded from drop counting and percentile s
 | [`useDevMenuFps.ts`](src/features/performance/hooks/useDevMenuFps.ts) | Native UI FPS + JS rAF FPS |
 | [`useNativeFrameMetrics.ts`](src/features/performance/hooks/useNativeFrameMetrics.ts) | Drops + percentiles via Reanimated frame callback |
 | [`useJsLagDetector.ts`](src/features/performance/hooks/useJsLagDetector.ts) | JS scheduling heuristic |
-| [`PerformanceOverlay.tsx`](src/features/performance/components/PerformanceOverlay.tsx) | Draggable overlay UI |
+| [`PerformanceOverlay.tsx`](src/components/organisms/performance/PerformanceOverlay/PerformanceOverlay.tsx) | Draggable overlay UI |
 | [`frameBuffer.worklet.ts`](src/features/performance/services/frameBuffer.worklet.ts) | UI-thread frame time ring buffer |
 | [`frameStatsCalculator.ts`](src/features/performance/services/frameStatsCalculator.ts) | P50/P95 quickselect |
 

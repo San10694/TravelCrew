@@ -8,7 +8,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
-import type { ChatBottomSheetRef } from '@/features/chat/components/ChatBottomSheet';
+import type { ChatBottomSheetRef } from '@/components/organisms/chat/ChatBottomSheet';
 
 SplashScreen.preventAutoHideAsync();
 

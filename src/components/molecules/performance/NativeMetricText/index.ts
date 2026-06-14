@@ -1,0 +1,1 @@
+export { NativeMetricText } from './NativeMetricText';

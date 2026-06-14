@@ -1,0 +1,1 @@
+export { StaticMetricText } from './StaticMetricText';

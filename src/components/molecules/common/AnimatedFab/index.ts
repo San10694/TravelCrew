@@ -1,0 +1,1 @@
+export { AnimatedFab } from './AnimatedFab';
