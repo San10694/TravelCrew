@@ -3,7 +3,6 @@ import { StyleSheet, TextInput } from 'react-native';
 import Animated, {
   type SharedValue,
   useAnimatedProps,
-  useDerivedValue,
 } from 'react-native-reanimated';
 
 import { colors, fontFamily, typography } from '@/features/shared/constants/theme';
@@ -52,34 +51,6 @@ function StaticMetricTextComponent({ label, value }: StaticMetricTextProps) {
 }
 
 export const StaticMetricText = memo(StaticMetricTextComponent);
-
-type DerivedMetricTextProps = {
-  label: string;
-  value: SharedValue<number>;
-  suffix?: string;
-};
-
-function DerivedMetricTextComponent({ label, value, suffix = '' }: DerivedMetricTextProps) {
-  const textValue = useDerivedValue(() => `${label}: ${Math.round(value.value)}${suffix}`);
-
-  const animatedProps = useAnimatedProps(() => {
-    const text = textValue.value;
-    return {
-      text,
-      defaultValue: text,
-    };
-  });
-
-  return (
-    <AnimatedTextInput
-      editable={false}
-      style={styles.metric}
-      animatedProps={animatedProps}
-    />
-  );
-}
-
-export const DerivedMetricText = memo(DerivedMetricTextComponent);
 
 const styles = StyleSheet.create({
   metric: {

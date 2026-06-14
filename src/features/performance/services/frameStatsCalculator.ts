@@ -1,15 +1,8 @@
-const FRAME_DROP_FPS_THRESHOLD = 45;
-const FRAME_DROP_TIME_THRESHOLD_MS = 22.2;
-
 export type FrameStats = {
   p50FrameTime: number;
   p95FrameTime: number;
   worstFrameTime: number;
 };
-
-export function isFrameDrop(frameTimeMs: number, fps: number): boolean {
-  return fps < FRAME_DROP_FPS_THRESHOLD || frameTimeMs > FRAME_DROP_TIME_THRESHOLD_MS;
-}
 
 function quickselect(values: number[], k: number): number {
   const arr = values.slice();

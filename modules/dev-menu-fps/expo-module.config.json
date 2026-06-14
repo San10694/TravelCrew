@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["DevMenuFpsModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.devmenufps.DevMenuFpsModule"]
+  }
+}

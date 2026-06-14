@@ -47,7 +47,14 @@ function ChatBottomSheetComponent(
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.4} />
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.2}
+        pressBehavior="none"
+        enableTouchThrough
+      />
     ),
     [],
   );

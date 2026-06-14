@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/features/shared/ui/AppText';
 import { Rating } from '@/features/shared/ui/Rating';
+import { RemoteImage } from '@/features/shared/ui/RemoteImage';
 import { colors, layout } from '@/features/shared/constants/theme';
 
 type TravelCardHeroProps = {
@@ -21,13 +21,11 @@ function TravelCardHeroComponent({
 }: TravelCardHeroProps) {
   return (
     <View style={styles.container}>
-      <Image
-        source={imageUrl}
-        placeholder={{ blurhash }}
-        style={styles.image}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        transition={200}
+      <RemoteImage
+        uri={imageUrl}
+        blurhash={blurhash}
+        width="100%"
+        height={layout.heroImageHeight}
       />
       <View style={styles.scrimFade} pointerEvents="none" />
       <View style={styles.scrim} pointerEvents="none" />
@@ -52,10 +50,6 @@ const styles = StyleSheet.create({
   destination: {
     flex: 1,
     marginRight: 8,
-  },
-  image: {
-    height: layout.heroImageHeight,
-    width: '100%',
   },
   overlayContent: {
     alignItems: 'flex-end',

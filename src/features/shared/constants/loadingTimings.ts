@@ -1,0 +1,3 @@
+export const FEED_SIMULATED_LOAD_MS = 900;
+export const MOCK_THINKING_DELAY_MS = 900;
+export const IMAGE_SHIMMER_MIN_MS = 200;

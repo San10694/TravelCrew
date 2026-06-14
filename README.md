@@ -15,6 +15,10 @@ A production-quality React Native travel discovery application built with Expo, 
 # Install dependencies
 npm install
 
+# Optional: enable live Anthropic streaming for Ask Crew
+cp .env.example .env
+# Add EXPO_PUBLIC_ANTHROPIC_API_KEY to .env
+
 # Start the development server
 npx expo start
 ```
@@ -97,7 +101,7 @@ Three isolated Zustand stores prevent cross-feature rerenders:
 4. **Reanimated shared values** for UI-thread expand/collapse animations
 5. **Stable callbacks** (`useCallback`) and key extractors
 6. **expo-image** with memory-disk cache and blurhash placeholders
-7. **Token streaming** via `requestAnimationFrame` — non-blocking UI thread
+7. **Token streaming** batched via `setTimeout` (32ms / 4 chars) to limit Zustand updates during AI responses
 8. **Dev rerender logging** via `useRerenderLogger` (development only)
 
 ## Development Tooling
@@ -128,9 +132,17 @@ Tap the **Perf** button (bottom-left) in development to toggle the draggable ove
 
 Metrics include dev overlay overhead — use for **relative** before/after comparisons, not absolute production baselines. See [PERFORMANCE.md](PERFORMANCE.md) for full methodology.
 
+## Ask Crew (AI Chat Sheet)
+
+- Bottom sheet overlays the feed at **50% peek** and **92% full** snap points
+- Feed stays scrollable behind the sheet (non-blocking backdrop)
+- Messages persist in memory for the app session
+- With `EXPO_PUBLIC_ANTHROPIC_API_KEY` set, responses stream token-by-token from the Anthropic API
+- Without an API key, mock responses simulate progressive streaming for local development
+
 ## Known Limitations
 
-- **Simulated AI**: Chat responses are mock data with token streaming simulation — no real API.
+- **Anthropic API key required for live AI**: Without `EXPO_PUBLIC_ANTHROPIC_API_KEY`, chat uses mock streaming responses.
 - **Expo Go**: Reanimated v4 and FlashList v2 work best with New Architecture enabled in a dev build.
 - **FlashList v2 sizing**: `estimatedItemSize` is included for documentation but v2 auto-sizes items on New Architecture.
 - **Remote images**: Requires network access for picsum.photos URLs.

@@ -5,7 +5,6 @@ export type PerformanceMetricsContextValue = {
   uiFpsText: SharedValue<string>;
   jsFpsText: SharedValue<string>;
   jsThreadStatusText: SharedValue<string>;
-  frameDropsCount: SharedValue<number>;
 };
 
 const PerformanceMetricsContext = createContext<PerformanceMetricsContextValue | null>(null);
@@ -18,16 +17,14 @@ export function PerformanceMetricsProvider({ children }: PerformanceMetricsProvi
   const uiFpsText = useSharedValue('60');
   const jsFpsText = useSharedValue('60');
   const jsThreadStatusText = useSharedValue('Healthy');
-  const frameDropsCount = useSharedValue(0);
 
   const value = useMemo(
     () => ({
       uiFpsText,
       jsFpsText,
       jsThreadStatusText,
-      frameDropsCount,
     }),
-    [frameDropsCount, jsFpsText, jsThreadStatusText, uiFpsText],
+    [jsFpsText, jsThreadStatusText, uiFpsText],
   );
 
   return (

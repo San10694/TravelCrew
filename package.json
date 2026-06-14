@@ -6,6 +6,7 @@
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@shopify/flash-list": "2.0.2",
+    "dev-menu-fps": "file:modules/dev-menu-fps",
     "expo": "~56.0.11",
     "expo-constants": "~56.0.18",
     "expo-font": "~56.0.6",

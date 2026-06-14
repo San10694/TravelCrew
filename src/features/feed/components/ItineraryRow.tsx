@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { ItineraryItem } from '@/features/feed/types/travelBundle';
 import { AppText } from '@/features/shared/ui/AppText';
+import { RemoteImage } from '@/features/shared/ui/RemoteImage';
 import { colors, layout, radii, spacing } from '@/features/shared/constants/theme';
 
 type ItineraryRowProps = {
@@ -13,13 +13,12 @@ type ItineraryRowProps = {
 function ItineraryRowComponent({ item }: ItineraryRowProps) {
   return (
     <View style={styles.container}>
-      <Image
-        source={item.imageUrl}
-        placeholder={{ blurhash: item.blurhash }}
-        style={styles.image}
-        contentFit="cover"
-        cachePolicy="memory-disk"
-        transition={150}
+      <RemoteImage
+        uri={item.imageUrl}
+        blurhash={item.blurhash}
+        width={layout.itineraryImageWidth}
+        height={layout.itineraryImageHeight}
+        borderRadius={radii.md}
       />
       <AppText variant="caption" color={colors.textSecondary} style={styles.day}>
         Day {item.day}
@@ -40,11 +39,6 @@ const styles = StyleSheet.create({
   },
   day: {
     marginTop: spacing.xs,
-  },
-  image: {
-    borderRadius: radii.md,
-    height: layout.itineraryImageHeight,
-    width: layout.itineraryImageWidth,
   },
   title: {
     marginTop: 2,

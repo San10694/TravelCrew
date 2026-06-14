@@ -1,6 +1,11 @@
 import { useCallback, useRef } from 'react';
 
 import { getMockAssistantResponse, tokenizeResponse } from '@/features/chat/data/mockResponses';
+import {
+  isAnthropicConfigured,
+  streamAnthropicResponse,
+} from '@/features/chat/services/anthropicStream';
+import { MOCK_THINKING_DELAY_MS } from '@/features/shared/constants/loadingTimings';
 import { useChatStore } from '@/features/chat/store/chatStore';
 
 const BATCH_INTERVAL_MS = 32;
@@ -9,6 +14,95 @@ const BATCH_CHAR_THRESHOLD = 4;
 type StreamControls = {
   cancel: () => void;
 };
+
+type BatchWriter = {
+  append: (chunk: string) => void;
+  flush: () => void;
+  cancel: () => void;
+};
+
+function createBatchWriter(
+  messageId: string,
+  startAssistantResponse: (messageId: string) => void,
+  appendTokenBatch: (messageId: string, chunk: string) => void,
+  finishStreaming: () => void,
+  setThinking: (value: boolean) => void,
+): BatchWriter {
+  let pendingChunk = '';
+  let lastFlushAt = 0;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let isCancelled = false;
+  let hasStarted = false;
+
+  const flush = () => {
+    if (pendingChunk.length === 0) {
+      return;
+    }
+
+    appendTokenBatch(messageId, pendingChunk);
+    pendingChunk = '';
+    lastFlushAt = Date.now();
+  };
+
+  const scheduleFlush = () => {
+    if (timeoutId !== null) {
+      return;
+    }
+
+    const elapsed = Date.now() - lastFlushAt;
+    const delay = Math.max(0, BATCH_INTERVAL_MS - elapsed);
+
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+      flush();
+    }, delay);
+  };
+
+  const ensureStarted = () => {
+    if (hasStarted) {
+      return;
+    }
+
+    hasStarted = true;
+    startAssistantResponse(messageId);
+    setThinking(false);
+    lastFlushAt = Date.now();
+  };
+
+  return {
+    append: (chunk: string) => {
+      if (isCancelled || chunk.length === 0) {
+        return;
+      }
+
+      ensureStarted();
+      pendingChunk += chunk;
+
+      if (pendingChunk.length >= BATCH_CHAR_THRESHOLD) {
+        flush();
+        return;
+      }
+
+      scheduleFlush();
+    },
+    flush: () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      flush();
+    },
+    cancel: () => {
+      isCancelled = true;
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      flush();
+      finishStreaming();
+    },
+  };
+}
 
 export function useStreamingResponse(): {
   sendMessage: (content: string) => void;
@@ -26,6 +120,110 @@ export function useStreamingResponse(): {
     streamRef.current = null;
   }, []);
 
+  const streamMockResponse = useCallback(
+    (messageId: string) => {
+      const tokens = tokenizeResponse(getMockAssistantResponse());
+      let tokenIndex = 0;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      let isCancelled = false;
+
+      const writer = createBatchWriter(
+        messageId,
+        startAssistantResponse,
+        appendTokenBatch,
+        finishStreaming,
+        setThinking,
+      );
+
+      const scheduleNextToken = () => {
+        if (isCancelled) {
+          return;
+        }
+
+        if (tokenIndex >= tokens.length) {
+          writer.flush();
+          finishStreaming();
+          streamRef.current = null;
+          return;
+        }
+
+        writer.append(tokens[tokenIndex] ?? '');
+        tokenIndex += 1;
+        timeoutId = setTimeout(scheduleNextToken, BATCH_INTERVAL_MS / 2);
+      };
+
+      streamRef.current = {
+        cancel: () => {
+          isCancelled = true;
+          if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+          }
+          writer.cancel();
+        },
+      };
+
+      scheduleNextToken();
+    },
+    [appendTokenBatch, finishStreaming, setThinking, startAssistantResponse],
+  );
+
+  const streamAnthropic = useCallback(
+    async (messageId: string) => {
+      const abortController = new AbortController();
+      const writer = createBatchWriter(
+        messageId,
+        startAssistantResponse,
+        appendTokenBatch,
+        finishStreaming,
+        setThinking,
+      );
+
+      streamRef.current = {
+        cancel: () => {
+          abortController.abort();
+          writer.cancel();
+        },
+      };
+
+      try {
+        const messages = useChatStore.getState().messages;
+        await streamAnthropicResponse({
+          messages,
+          onTextDelta: writer.append,
+          signal: abortController.signal,
+        });
+        writer.flush();
+        finishStreaming();
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        writer.flush();
+        if (!useChatStore.getState().isStreaming) {
+          startAssistantResponse(messageId);
+          setThinking(false);
+        }
+
+        const fallbackMessage =
+          error instanceof Error
+            ? `Sorry, I couldn't reach Crew right now. ${error.message}`
+            : 'Sorry, I could not reach Crew right now.';
+
+        appendTokenBatch(messageId, fallbackMessage);
+        finishStreaming();
+      } finally {
+        streamRef.current = null;
+      }
+    },
+    [
+      appendTokenBatch,
+      finishStreaming,
+      setThinking,
+      startAssistantResponse,
+    ],
+  );
+
   const sendMessage = useCallback(
     (content: string) => {
       const trimmed = content.trim();
@@ -38,93 +236,29 @@ export function useStreamingResponse(): {
       setThinking(true);
 
       const messageId = `assistant-${Date.now()}`;
-      const tokens = tokenizeResponse(getMockAssistantResponse());
-      let tokenIndex = 0;
-      let pendingChunk = '';
-      let lastFlushAt = 0;
-      let timeoutId: ReturnType<typeof setTimeout> | null = null;
-      let isCancelled = false;
-      let hasStarted = false;
 
-      const flushChunk = () => {
-        if (pendingChunk.length === 0) {
-          return;
-        }
+      if (isAnthropicConfigured()) {
+        void streamAnthropic(messageId);
+        return;
+      }
 
-        appendTokenBatch(messageId, pendingChunk);
-        pendingChunk = '';
-        lastFlushAt = Date.now();
-      };
-
-      const scheduleFlush = () => {
-        if (timeoutId !== null) {
-          return;
-        }
-
-        const elapsed = Date.now() - lastFlushAt;
-        const delay = Math.max(0, BATCH_INTERVAL_MS - elapsed);
-
-        timeoutId = setTimeout(() => {
-          timeoutId = null;
-          flushChunk();
-
-          if (tokenIndex < tokens.length && !isCancelled) {
-            scheduleNextToken();
-          }
-        }, delay);
-      };
-
-      const scheduleNextToken = () => {
-        if (isCancelled) {
-          return;
-        }
-
-        if (!hasStarted) {
-          hasStarted = true;
-          startAssistantResponse(messageId);
-          setThinking(false);
-          lastFlushAt = Date.now();
-        }
-
-        if (tokenIndex >= tokens.length) {
-          flushChunk();
-          finishStreaming();
-          streamRef.current = null;
-          return;
-        }
-
-        pendingChunk += tokens[tokenIndex] ?? '';
-        tokenIndex += 1;
-
-        if (pendingChunk.length >= BATCH_CHAR_THRESHOLD) {
-          flushChunk();
-          scheduleNextToken();
-          return;
-        }
-
-        scheduleFlush();
-      };
+      const thinkingTimeoutId = setTimeout(() => {
+        streamMockResponse(messageId);
+      }, MOCK_THINKING_DELAY_MS);
 
       streamRef.current = {
         cancel: () => {
-          isCancelled = true;
-          if (timeoutId !== null) {
-            clearTimeout(timeoutId);
-          }
-          flushChunk();
-          finishStreaming();
+          clearTimeout(thinkingTimeoutId);
+          setThinking(false);
         },
       };
-
-      scheduleNextToken();
     },
     [
       addUserMessage,
-      appendTokenBatch,
       cancelActiveStream,
-      finishStreaming,
       setThinking,
-      startAssistantResponse,
+      streamAnthropic,
+      streamMockResponse,
     ],
   );
 

@@ -68,8 +68,8 @@ function PerformanceOverlayComponent() {
       <Animated.View style={[styles.overlay, animatedStyle]} pointerEvents="box-none">
         <Text style={styles.title}>Performance</Text>
         <Text style={styles.note}>Metrics include dev overlay overhead</Text>
-        <NativeMetricText label="UI FPS (compositor)" value={uiFpsText} />
-        <NativeMetricText label="JS FPS (event loop)" value={jsFpsText} />
+        <NativeMetricText label="UI FPS" value={uiFpsText} />
+        <NativeMetricText label="JS FPS" value={jsFpsText} />
         <SessionDropsMetric />
         <NativeMetricText label="JS Scheduling" value={jsThreadStatusText} />
         <PercentileMetrics />

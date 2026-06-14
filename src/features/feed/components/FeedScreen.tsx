@@ -3,6 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TravelFeedList } from '@/features/feed/components/TravelFeedList';
+import { FeedSkeletonList } from '@/features/feed/components/FeedSkeletonList';
+import { useSimulatedFeedLoad } from '@/features/feed/hooks/useSimulatedFeedLoad';
 import { useFeedStore } from '@/features/feed/store/feedStore';
 import { AppText } from '@/features/shared/ui/AppText';
 import { colors, layout, spacing } from '@/features/shared/constants/theme';
@@ -13,6 +15,7 @@ function FeedScreenComponent() {
 
   const bundles = useFeedStore((state) => state.bundles);
   const insets = useSafeAreaInsets();
+  const { isReady } = useSimulatedFeedLoad();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -23,10 +26,14 @@ function FeedScreenComponent() {
         </AppText>
         <View style={styles.divider} />
       </View>
-      <TravelFeedList
-        bundles={bundles}
-        contentBottomPadding={layout.fabSize + spacing.lg * 2 + insets.bottom}
-      />
+      {isReady ? (
+        <TravelFeedList
+          bundles={bundles}
+          contentBottomPadding={layout.fabSize + spacing.lg * 2 + insets.bottom}
+        />
+      ) : (
+        <FeedSkeletonList />
+      )}
     </View>
   );
 }
