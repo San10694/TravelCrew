@@ -5,8 +5,8 @@ import { ListRenderItemInfo, StyleSheet, View } from 'react-native';
 import { ChatEmptyState } from '@/features/chat/components/ChatEmptyState';
 import { ChatMessageBubble } from '@/features/chat/components/ChatMessageBubble';
 import { TypingIndicator } from '@/features/chat/components/TypingIndicator';
-import { useStreamingResponse } from '@/features/chat/hooks/useStreamingResponse';
-import { useChatStore } from '@/features/chat/store/chatStore';
+import { useChatSheetContext } from '@/features/chat/context/ChatSheetContext';
+import { useChatAutoScroll } from '@/features/chat/hooks/useChatAutoScroll';
 import type { Message } from '@/features/chat/types/message';
 import { AppText } from '@/features/shared/ui/AppText';
 import { colors, fontFamily, radii, spacing } from '@/features/shared/constants/theme';
@@ -32,8 +32,12 @@ function ChatListHeader() {
 }
 
 function ChatMessageListComponent() {
-  const messages = useChatStore((state) => state.messages);
-  const { sendMessage } = useStreamingResponse();
+  const { messages, isThinking, isStreaming, sendMessage } = useChatSheetContext();
+  const { listRef, onContentSizeChange, scrollEventsHandlersHook } = useChatAutoScroll({
+    messages,
+    isThinking,
+    isStreaming,
+  });
 
   const keyExtractor = useCallback((item: Message) => item.id, []);
 
@@ -44,7 +48,10 @@ function ChatMessageListComponent() {
 
   const renderListHeader = useCallback(() => <ChatListHeader />, []);
 
-  const renderListFooter = useCallback(() => <TypingIndicator />, []);
+  const renderListFooter = useCallback(
+    () => <TypingIndicator isThinking={isThinking} isStreaming={isStreaming} />,
+    [isStreaming, isThinking],
+  );
 
   const renderEmpty = useCallback(
     () => <ChatEmptyState onSuggestionPress={sendMessage} />,
@@ -53,6 +60,7 @@ function ChatMessageListComponent() {
 
   return (
     <BottomSheetFlatList
+      ref={listRef}
       data={messages}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
@@ -63,7 +71,10 @@ function ChatMessageListComponent() {
         styles.content,
         messages.length === 0 && styles.emptyContent,
       ]}
+      enableFooterMarginAdjustment
       keyboardShouldPersistTaps="handled"
+      scrollEventsHandlersHook={scrollEventsHandlersHook}
+      onContentSizeChange={onContentSizeChange}
     />
   );
 }

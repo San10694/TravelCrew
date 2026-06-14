@@ -13,9 +13,11 @@ import {
   type Ref,
 } from 'react';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChatMessageList } from '@/features/chat/components/ChatMessageList';
 import { ChatSheetFooter } from '@/features/chat/components/ChatSheetFooter';
+import { ChatSheetProvider } from '@/features/chat/context/ChatSheetContext';
 import { colors, radii, shadows } from '@/features/shared/constants/theme';
 
 export type ChatBottomSheetRef = {
@@ -32,6 +34,7 @@ function ChatBottomSheetComponent(
   ref: Ref<ChatBottomSheetRef>,
 ) {
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const insets = useSafeAreaInsets();
 
   const snapPoints = useMemo(() => ['50%', '92%'], []);
 
@@ -72,23 +75,27 @@ function ChatBottomSheetComponent(
   );
 
   return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={-1}
-      snapPoints={snapPoints}
-      enableDynamicSizing={false}
-      enablePanDownToClose
-      keyboardBehavior="interactive"
-      android_keyboardInputMode="adjustResize"
-      onChange={handleSheetChange}
-      backdropComponent={renderBackdrop}
-      footerComponent={renderFooter}
-      backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.handle}
-      style={styles.sheet}
-    >
-      <ChatMessageList />
-    </BottomSheet>
+    <ChatSheetProvider>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enableDynamicSizing={false}
+        enablePanDownToClose
+        topInset={insets.top}
+        keyboardBehavior="extend"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
+        onChange={handleSheetChange}
+        backdropComponent={renderBackdrop}
+        footerComponent={renderFooter}
+        backgroundStyle={styles.sheetBackground}
+        handleIndicatorStyle={styles.handle}
+        style={styles.sheet}
+      >
+        <ChatMessageList />
+      </BottomSheet>
+    </ChatSheetProvider>
   );
 }
 

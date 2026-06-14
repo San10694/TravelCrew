@@ -62,11 +62,19 @@ src/
 
 ## Architecture Decisions
 
-### Feature-First MVVM
+### Feature-First MVVM (React Native conventions)
 
-- **Model**: Zustand stores, types, and mock data generators
-- **ViewModel**: Feature hooks (`useStreamingResponse`, `usePerformanceInstrumentation`)
-- **View**: Memoized presentational components
+Layers map to existing folders — no `viewModels/` rename:
+
+| Layer | Folder | Responsibility |
+|-------|--------|----------------|
+| **Model** | `store/`, `types/`, `data/`, `repositories/`, `services/` | Domain state + data acquisition |
+| **ViewModel** | `hooks/` | Store/service access, UI state, commands for views |
+| **View** | `components/` | Render + forward events — **never import `store/` or `services/`** |
+
+**Import boundary:** `components/` may import `hooks/`, `types/`, and `shared/` only. Hooks are the sole layer that subscribes to Zustand and calls repositories/services.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for per-feature data flow, the chat Provider pattern, and anti-patterns.
 
 ### Sibling Composition at Root
 
@@ -74,11 +82,12 @@ The feed, FAB, chat bottom sheet, and performance overlay are **siblings** in `s
 
 ```
 RootLayout
-├── Slot (FeedScreen)
-├── FeedFab
-├── ChatBottomSheet (always mounted, index=-1)
-├── DevOverlayToggle (__DEV__)
-└── PerformanceOverlay (__DEV__)
+├── Slot (FeedScreen → useFeedScreen)
+├── AppOverlays
+│   ├── FeedFab
+│   ├── ChatBottomSheet → ChatSheetProvider (useChatSheet)
+│   ├── DevOverlayToggle (__DEV__)
+│   └── PerformanceOverlay (__DEV__)
 ```
 
 ## State Management
@@ -87,7 +96,7 @@ Three isolated Zustand stores prevent cross-feature rerenders:
 
 | Store | Responsibility |
 |-------|----------------|
-| `FeedStore` | 120 travel bundles (static mock data) |
+| `FeedStore` | Travel bundles + load status (populated via `feedRepository`) |
 | `ChatStore` | Messages, thinking/streaming state |
 | `PerformanceStore` | Session drops, JS scheduling status, percentiles |
 

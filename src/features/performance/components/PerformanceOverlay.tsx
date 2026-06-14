@@ -1,39 +1,26 @@
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 
-import { usePerformanceMetrics } from '@/features/performance/context/PerformanceMetricsContext';
 import {
   NativeMetricText,
   StaticMetricText,
 } from '@/features/performance/components/NativeMetricText';
-import { usePerformanceStore } from '@/features/performance/store/performanceStore';
+import { usePerformanceOverlay } from '@/features/performance/hooks/usePerformanceOverlay';
 import { colors, fontFamily, spacing, typography } from '@/features/shared/constants/theme';
 
-function PercentileMetrics() {
-  const p50FrameTime = usePerformanceStore((state) => state.p50FrameTime);
-  const p95FrameTime = usePerformanceStore((state) => state.p95FrameTime);
-  const worstFrameTime = usePerformanceStore((state) => state.worstFrameTime);
-
-  return (
-    <>
-      <StaticMetricText label="P50 (1s window)" value={`${p50FrameTime}ms`} />
-      <StaticMetricText label="P95 (1s window)" value={`${p95FrameTime}ms`} />
-      <StaticMetricText label="Worst (1s window)" value={`${worstFrameTime}ms`} />
-    </>
-  );
-}
-
-function SessionDropsMetric() {
-  const frameDrops = usePerformanceStore((state) => state.frameDrops);
-
-  return <StaticMetricText label="Session Drops" value={String(frameDrops)} />;
-}
-
 function PerformanceOverlayComponent() {
-  const isOverlayVisible = usePerformanceStore((state) => state.isOverlayVisible);
-  const { uiFpsText, jsFpsText, jsThreadStatusText } = usePerformanceMetrics();
+  const {
+    isOverlayVisible,
+    uiFpsText,
+    jsFpsText,
+    jsThreadStatusText,
+    p50FrameTime,
+    p95FrameTime,
+    worstFrameTime,
+    frameDrops,
+  } = usePerformanceOverlay();
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -70,9 +57,11 @@ function PerformanceOverlayComponent() {
         <Text style={styles.note}>Metrics include dev overlay overhead</Text>
         <NativeMetricText label="UI FPS" value={uiFpsText} />
         <NativeMetricText label="JS FPS" value={jsFpsText} />
-        <SessionDropsMetric />
+        <StaticMetricText label="Session Drops" value={String(frameDrops)} />
         <NativeMetricText label="JS Scheduling" value={jsThreadStatusText} />
-        <PercentileMetrics />
+        <StaticMetricText label="P50 (1s window)" value={`${p50FrameTime}ms`} />
+        <StaticMetricText label="P95 (1s window)" value={`${p95FrameTime}ms`} />
+        <StaticMetricText label="Worst (1s window)" value={`${worstFrameTime}ms`} />
       </Animated.View>
     </GestureDetector>
   );

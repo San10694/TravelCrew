@@ -1,16 +1,11 @@
 import { BottomSheetFooter, type BottomSheetFooterProps } from '@gorhom/bottom-sheet';
 import { memo, useCallback } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChatInput } from '@/features/chat/components/ChatInput';
-import { useStreamingResponse } from '@/features/chat/hooks/useStreamingResponse';
-import { useChatStore } from '@/features/chat/store/chatStore';
+import { useChatSheetContext } from '@/features/chat/context/ChatSheetContext';
 
 function ChatSheetFooterComponent(props: BottomSheetFooterProps) {
-  const insets = useSafeAreaInsets();
-  const { sendMessage } = useStreamingResponse();
-  const isStreaming = useChatStore((state) => state.isStreaming);
-  const isThinking = useChatStore((state) => state.isThinking);
+  const { sendMessage, isStreaming, isThinking } = useChatSheetContext();
 
   const handleSend = useCallback(
     (message: string) => {
@@ -20,7 +15,7 @@ function ChatSheetFooterComponent(props: BottomSheetFooterProps) {
   );
 
   return (
-    <BottomSheetFooter {...props} bottomInset={insets.bottom}>
+    <BottomSheetFooter {...props} bottomInset={0}>
       <ChatInput onSend={handleSend} disabled={isStreaming || isThinking} />
     </BottomSheetFooter>
   );

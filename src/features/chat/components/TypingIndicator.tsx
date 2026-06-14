@@ -9,8 +9,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { useChatStore } from '@/features/chat/store/chatStore';
 import { colors, radii, spacing } from '@/features/shared/constants/theme';
+
+type TypingIndicatorProps = {
+  isThinking: boolean;
+  isStreaming: boolean;
+};
 
 function Dot({ delay }: { delay: number }) {
   const opacity = useSharedValue(0.35);
@@ -36,10 +40,7 @@ function Dot({ delay }: { delay: number }) {
   return <Animated.View style={[styles.dot, animatedStyle]} />;
 }
 
-function TypingIndicatorComponent() {
-  const isThinking = useChatStore((state) => state.isThinking);
-  const isStreaming = useChatStore((state) => state.isStreaming);
-
+function TypingIndicatorComponent({ isThinking, isStreaming }: TypingIndicatorProps) {
   if (!isThinking || isStreaming) {
     return null;
   }

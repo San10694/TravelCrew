@@ -4,18 +4,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TravelFeedList } from '@/features/feed/components/TravelFeedList';
 import { FeedSkeletonList } from '@/features/feed/components/FeedSkeletonList';
-import { useSimulatedFeedLoad } from '@/features/feed/hooks/useSimulatedFeedLoad';
-import { useFeedStore } from '@/features/feed/store/feedStore';
+import { useFeedScreen } from '@/features/feed/hooks/useFeedScreen';
 import { AppText } from '@/features/shared/ui/AppText';
-import { colors, layout, spacing } from '@/features/shared/constants/theme';
+import { colors, spacing } from '@/features/shared/constants/theme';
 import { useRerenderLogger } from '@/features/shared/utils/rerenderLogger';
 
 function FeedScreenComponent() {
   useRerenderLogger('FeedScreen');
 
-  const bundles = useFeedStore((state) => state.bundles);
+  const { bundles, isReady, contentBottomPadding } = useFeedScreen();
   const insets = useSafeAreaInsets();
-  const { isReady } = useSimulatedFeedLoad();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -27,10 +25,7 @@ function FeedScreenComponent() {
         <View style={styles.divider} />
       </View>
       {isReady ? (
-        <TravelFeedList
-          bundles={bundles}
-          contentBottomPadding={layout.fabSize + spacing.lg * 2 + insets.bottom}
-        />
+        <TravelFeedList bundles={bundles} contentBottomPadding={contentBottomPadding} />
       ) : (
         <FeedSkeletonList />
       )}

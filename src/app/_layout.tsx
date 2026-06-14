@@ -1,30 +1,14 @@
 import 'react-native-gesture-handler';
 
-import {
-  PlusJakartaSans_400Regular,
-  PlusJakartaSans_500Medium,
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  useFonts,
-} from '@expo-google-fonts/plus-jakarta-sans';
 import { Slot } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import {
-  ChatBottomSheet,
-  type ChatBottomSheetRef,
-} from '@/features/chat/components/ChatBottomSheet';
-import { FeedFab } from '@/features/feed/components/FeedFab';
+import { AppOverlays } from '@/app/AppOverlays';
 import { PerformanceMetricsProvider } from '@/features/performance/context/PerformanceMetricsContext';
-import { DevOverlayToggle } from '@/features/performance/components/DevOverlayToggle';
-import { PerformanceOverlay } from '@/features/performance/components/PerformanceOverlay';
 import { usePerformanceInstrumentation } from '@/features/performance/hooks/usePerformanceInstrumentation';
-
-SplashScreen.preventAutoHideAsync();
+import { useAppShell } from '@/features/shared/hooks/useAppShell';
 
 function PerformanceInstrumentation() {
   usePerformanceInstrumentation();
@@ -32,25 +16,7 @@ function PerformanceInstrumentation() {
 }
 
 export default function RootLayout() {
-  const chatSheetRef = useRef<ChatBottomSheetRef>(null);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-
-  const [fontsLoaded] = useFonts({
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_500Medium,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-  });
-
-  const openChat = useCallback(() => {
-    chatSheetRef.current?.open();
-  }, []);
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
+  const { fontsLoaded, chatSheetRef, openChat, isChatOpen, setIsChatOpen } = useAppShell();
 
   if (!fontsLoaded) {
     return null;
@@ -62,16 +28,12 @@ export default function RootLayout() {
         <PerformanceMetricsProvider>
           <PerformanceInstrumentation />
           <Slot />
-          <View style={styles.overlay} pointerEvents="box-none">
-            <FeedFab onPress={openChat} visible={!isChatOpen} />
-            <ChatBottomSheet ref={chatSheetRef} onOpenChange={setIsChatOpen} />
-            {__DEV__ ? (
-              <>
-                <DevOverlayToggle />
-                <PerformanceOverlay />
-              </>
-            ) : null}
-          </View>
+          <AppOverlays
+            chatSheetRef={chatSheetRef}
+            openChat={openChat}
+            isChatOpen={isChatOpen}
+            onChatOpenChange={setIsChatOpen}
+          />
         </PerformanceMetricsProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -79,9 +41,6 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFill,
-  },
   root: {
     flex: 1,
   },

@@ -2,13 +2,12 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { usePerformanceStore } from '@/features/performance/store/performanceStore';
+import { useDevOverlayToggle } from '@/features/performance/hooks/usePerformanceOverlay';
 import { colors, spacing, typography } from '@/features/shared/constants/theme';
 
 function DevOverlayToggleComponent() {
   const insets = useSafeAreaInsets();
-  const toggleOverlay = usePerformanceStore((state) => state.toggleOverlay);
-  const isOverlayVisible = usePerformanceStore((state) => state.isOverlayVisible);
+  const { isOverlayVisible, toggleOverlay } = useDevOverlayToggle();
 
   return (
     <Pressable

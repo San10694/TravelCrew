@@ -1,6 +1,7 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { memo, useCallback, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { memo, useCallback, useEffect, useState } from 'react';
+import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   colors,
@@ -19,6 +20,25 @@ type ChatInputProps = {
 
 function ChatInputComponent({ onSend, disabled = false }: ChatInputProps) {
   const [value, setValue] = useState('');
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
@@ -31,7 +51,12 @@ function ChatInputComponent({ onSend, disabled = false }: ChatInputProps) {
   }, [disabled, onSend, value]);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingBottom: isKeyboardVisible ? spacing.sm : spacing.sm + insets.bottom },
+      ]}
+    >
       <View style={styles.composer}>
         <BottomSheetTextInput
           value={value}
@@ -78,7 +103,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
   },
   input: {
     color: colors.text,
