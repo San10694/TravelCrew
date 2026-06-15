@@ -1,10 +1,11 @@
+/** Horizontal FlashList of day-by-day itinerary items inside an expanded TravelCard. */
 import { FlashList, type ListRenderItemInfo } from '@shopify/flash-list';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/atoms/AppText';
 import { ItineraryRow } from '@/components/molecules/feed/ItineraryRow';
 import type { ItineraryItem } from '@/features/feed/types/travelBundle';
-import { colors, layout, spacing } from '@/features/shared/constants/theme';
+import { colors, fontFamily, layout, spacing } from '@/features/shared/constants/theme';
 import type { FlashListPropsWithEstimate } from '@/features/shared/utils/flashListProps';
 
 type ItineraryListProps = {
@@ -36,15 +37,21 @@ export function ItineraryList({ items }: ItineraryListProps) {
 
 const styles = StyleSheet.create({
   container: {
+    borderTopColor: colors.border,
+    borderTopWidth: StyleSheet.hairlineWidth,
     height: layout.itinerarySectionHeight,
+    paddingTop: spacing.sm,
   },
   content: {
+    paddingBottom: spacing.md,
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingRight: spacing.lg,
   },
   sectionLabel: {
+    fontFamily: fontFamily.semiBold,
+    letterSpacing: 0.6,
+    marginBottom: spacing.sm,
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
     textTransform: 'uppercase',
   },
 });

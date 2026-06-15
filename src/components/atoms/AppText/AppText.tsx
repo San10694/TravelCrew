@@ -1,3 +1,4 @@
+/** Typography atom — applies design-system textVariants (display, heading, body, caption). */
 import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 
 import {

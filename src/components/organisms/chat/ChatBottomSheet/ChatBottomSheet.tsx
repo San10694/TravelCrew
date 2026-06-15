@@ -1,10 +1,16 @@
+/**
+ * Gorhom bottom sheet hosting the Travel Crew AI chat.
+ *
+ * Snap points 50% / 92%. Wraps children in ChatSheetProvider, uses footerComponent
+ * for input. Exposes imperative open/close via ref for FeedFab.
+ */
 import BottomSheet, {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet';
 import { forwardRef, useImperativeHandle, useRef, type Ref } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChatMessageList } from '@/components/organisms/chat/ChatMessageList';
@@ -70,9 +76,10 @@ export const ChatBottomSheet = forwardRef(function ChatBottomSheet(
         enableDynamicSizing={false}
         enablePanDownToClose
         topInset={insets.top}
-        keyboardBehavior="extend"
+        bottomInset={0}
+        keyboardBehavior={Platform.OS === 'ios' ? 'extend' : 'interactive'}
         keyboardBlurBehavior="restore"
-        android_keyboardInputMode="adjustResize"
+        android_keyboardInputMode="adjustPan"
         onChange={handleSheetChange}
         backdropComponent={renderBackdrop}
         footerComponent={renderFooter}

@@ -1,3 +1,7 @@
+/**
+ * Heuristic JS scheduling health check. Measures setInterval→rAF drift;
+ * marks "JS Busy" when drift exceeds 50ms. Updates overlay shared value and store.
+ */
 import { useEffect, useRef } from 'react';
 
 import { usePerformanceMetrics } from '@/features/performance/context/PerformanceMetricsContext';

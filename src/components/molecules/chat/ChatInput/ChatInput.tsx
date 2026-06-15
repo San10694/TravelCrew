@@ -1,3 +1,7 @@
+/**
+ * Chat composer in bottom sheet footer. Uses BottomSheetTextInput for keyboard sync.
+ * Tracks keyboard visibility for safe-area padding; send is disabled while streaming/thinking.
+ */
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { useEffect, useState } from 'react';
 import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -61,7 +65,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
         <BottomSheetTextInput
           value={value}
           onChangeText={setValue}
-          placeholder="Ask about destinations, budgets, or trip types..."
+          placeholder="Ask about your next trip..."
           placeholderTextColor={colors.textMuted}
           style={styles.input}
           multiline

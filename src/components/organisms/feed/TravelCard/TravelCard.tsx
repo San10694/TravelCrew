@@ -1,3 +1,9 @@
+/**
+ * Single travel bundle card with expandable itinerary section.
+ *
+ * Hero image, price, trip type badge, and animated ExpandableDetails. Uses
+ * useRecyclingState so expand state resets when FlashList recycles the row.
+ */
 import { useRecyclingState } from '@shopify/flash-list';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';

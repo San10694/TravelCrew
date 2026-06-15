@@ -1,3 +1,7 @@
+/**
+ * Feed domain state. Holds travel bundles and load status (idle/loading/ready/error).
+ * Populated by useFeedScreen via feedRepository; no data generation at import time.
+ */
 import { create } from 'zustand';
 
 import type { TravelBundle } from '@/features/feed/types/travelBundle';

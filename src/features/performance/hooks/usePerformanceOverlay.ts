@@ -1,3 +1,7 @@
+/**
+ * ViewModel for PerformanceOverlay and DevOverlayToggle.
+ * Merges Reanimated FPS shared values with Zustand frame stats and overlay visibility.
+ */
 import { usePerformanceMetrics } from '@/features/performance/context/PerformanceMetricsContext';
 import { usePerformanceStore } from '@/features/performance/store/performanceStore';
 import type { SharedValue } from 'react-native-reanimated';

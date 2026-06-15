@@ -1,3 +1,4 @@
+/** Feed FAB — opens Travel Crew chat via AnimatedFab; hidden while chat sheet is open. */
 
 import { AnimatedFab } from '@/components/molecules/common/AnimatedFab';
 

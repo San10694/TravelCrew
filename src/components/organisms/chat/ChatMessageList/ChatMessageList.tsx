@@ -1,3 +1,9 @@
+/**
+ * Scrollable chat message area inside the bottom sheet.
+ *
+ * Uses BottomSheetScrollView (not FlatList) for reliable auto-scroll with variable-height
+ * bubbles. Reads messages and sendMessage from ChatSheetContext; delegates scroll to useChatAutoScroll.
+ */
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { StyleSheet } from 'react-native';
 

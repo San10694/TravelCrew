@@ -1,3 +1,9 @@
+/**
+ * Chat domain state (Zustand). Single source of truth for messages and stream lifecycle.
+ *
+ * Holds messages[], isThinking, isStreaming. Mutations are synchronous; streaming
+ * orchestration lives in useStreamingResponse, which calls these actions.
+ */
 import { create } from 'zustand';
 
 import type { Message } from '@/features/chat/types/message';

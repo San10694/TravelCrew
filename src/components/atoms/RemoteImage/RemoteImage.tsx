@@ -1,3 +1,7 @@
+/**
+ * Cached remote image atom (expo-image). Shows ShimmerBox until load completes
+ * with a minimum shimmer duration to avoid flash on fast cache hits.
+ */
 import { Image, type ImageContentFit } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';

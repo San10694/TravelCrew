@@ -3,17 +3,18 @@ package expo.modules.devmenufps
 import android.os.Handler
 import android.os.Looper
 import android.view.Choreographer
-import com.facebook.react.bridge.UiThreadUtil
 import kotlin.math.roundToInt
 
 /**
  * UI FPS via Choreographer (RN FpsView pattern). JS FPS is measured in JS via rAF.
  */
 internal class DevMenuFpsMonitor(
+  private val maxRefreshRate: Int,
   private val onUpdate: (uiFps: Int) -> Unit,
 ) : Choreographer.FrameCallback {
 
   private val choreographer = Choreographer.getInstance()
+  private val mainHandler = Handler(Looper.getMainLooper())
   private var isRunning = false
 
   private var firstFrameTime = -1L
@@ -38,7 +39,7 @@ internal class DevMenuFpsMonitor(
 
     isRunning = true
     resetCounters()
-    UiThreadUtil.runOnUiThread {
+    mainHandler.post {
       choreographer.postFrameCallback(this)
     }
     scheduleEmit()
@@ -50,7 +51,7 @@ internal class DevMenuFpsMonitor(
     }
 
     isRunning = false
-    UiThreadUtil.runOnUiThread {
+    mainHandler.post {
       choreographer.removeFrameCallback(this)
     }
     emitHandler.removeCallbacks(emitRunnable)
@@ -77,7 +78,7 @@ internal class DevMenuFpsMonitor(
 
     val elapsedNanos = lastFrameTime - firstFrameTime
     val uiFps = ((numUiFrameCallbacks - 1).coerceAtLeast(0) * 1e9 / elapsedNanos).roundToInt()
-    onUpdate(uiFps.coerceAtLeast(0))
+    onUpdate(uiFps.coerceIn(0, maxRefreshRate))
   }
 
   private fun resetCounters() {

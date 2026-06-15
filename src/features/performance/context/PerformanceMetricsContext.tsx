@@ -1,3 +1,8 @@
+/**
+ * Reanimated shared values for perf overlay text (UI FPS, JS FPS, JS scheduling).
+ *
+ * Writers update .value on UI/JS threads; NativeMetricText reads without React re-renders.
+ */
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
 

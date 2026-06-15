@@ -1,3 +1,9 @@
+/**
+ * Chat sheet ViewModel — composes chatStore + useStreamingResponse.
+ *
+ * Single instance created inside ChatSheetProvider; child organisms read via
+ * useChatSheetContext(). Do not call useStreamingResponse outside this hook.
+ */
 import { useChatStore } from '@/features/chat/store/chatStore';
 import { useStreamingResponse } from '@/features/chat/hooks/useStreamingResponse';
 import type { Message } from '@/features/chat/types/message';

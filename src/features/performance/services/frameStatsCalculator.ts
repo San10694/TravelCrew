@@ -1,3 +1,4 @@
+/** Computes P50/P95/worst frame times from a snapshot using quickselect (JS thread). */
 export type FrameStats = {
   p50FrameTime: number;
   p95FrameTime: number;

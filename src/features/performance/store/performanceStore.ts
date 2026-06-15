@@ -1,3 +1,7 @@
+/**
+ * Dev overlay state: frame percentiles, session drops, JS thread health, visibility toggle.
+ * Updated by useNativeFrameMetrics and useJsLagDetector when overlay is open.
+ */
 import { create } from 'zustand';
 
 import type { FrameStats } from '@/features/performance/services/frameStatsCalculator';

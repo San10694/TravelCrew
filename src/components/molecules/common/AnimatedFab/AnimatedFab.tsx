@@ -1,3 +1,7 @@
+/**
+ * Reanimated FAB with asymmetric show/hide: instant hide (avoids overlap with chat send),
+ * 200ms fade-in on show. Used by FeedFab for "Ask Travel Crew".
+ */
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {

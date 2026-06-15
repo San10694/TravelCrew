@@ -1,3 +1,9 @@
+/**
+ * Chat sheet context — shares one ViewModel instance across bottom sheet children.
+ *
+ * Provider wraps ChatBottomSheet content so ChatMessageList, ChatSheetFooter, and
+ * TypingIndicator share the same stream controller and store subscriptions.
+ */
 import { createContext, useContext, type ReactNode } from 'react';
 
 import { useChatSheet, type ChatSheetViewModel } from '@/features/chat/hooks/useChatSheet';

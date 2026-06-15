@@ -1,3 +1,7 @@
+/**
+ * Seeded pseudo-random travel bundle generator for local dev.
+ * Produces destinations, prices, hero images (picsum), and per-day itinerary items.
+ */
 import type { ItineraryItem, TravelBundle, TripType } from '@/features/feed/types/travelBundle';
 import { layout } from '@/features/shared/constants/theme';
 

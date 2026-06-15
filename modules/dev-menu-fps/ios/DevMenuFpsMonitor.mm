@@ -1,6 +1,9 @@
+// Samples UI thread frame rate via CADisplayLink (RCTFPSGraph-equivalent).
+// Counts frames over >=1s windows, clamps to UIScreen.maximumFramesPerSecond, emits to JS.
 #import "DevMenuFpsMonitor.h"
 
 #import <QuartzCore/CADisplayLink.h>
+#import <UIKit/UIKit.h>
 
 @interface DevMenuFpsCounter : NSObject
 
@@ -36,7 +39,9 @@
   }
 
   if (timestamp - _prevTime >= 1) {
-    _fps = (NSUInteger)lround((double)_frameCount / (timestamp - _prevTime));
+    NSUInteger maxFps = (NSUInteger)[UIScreen mainScreen].maximumFramesPerSecond;
+    NSUInteger rawFps = (NSUInteger)lround((double)_frameCount / (timestamp - _prevTime));
+    _fps = MIN(rawFps, maxFps);
     _prevTime = timestamp;
     _frameCount = 0;
     return YES;

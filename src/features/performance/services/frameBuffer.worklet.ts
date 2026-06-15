@@ -1,3 +1,7 @@
+/**
+ * UI-thread ring buffer for frame times (Reanimated worklets).
+ * Used by useNativeFrameMetrics for P50/P95/worst and drop detection (>22.2ms).
+ */
 export type FrameTimeBuffer = {
   next: number;
   buffer: Float32Array;

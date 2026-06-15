@@ -1,3 +1,9 @@
+/**
+ * Supplementary UI frame metrics via Reanimated useFrameCallback.
+ *
+ * Tracks P50/P95/worst frame times and session drops (>22.2ms). Syncs to performanceStore
+ * at 1 Hz. Excludes first 500ms warmup. Independent of dev-menu FPS numbers.
+ */
 import { useCallback, useEffect, useRef } from 'react';
 import { runOnJS, useFrameCallback, useSharedValue } from 'react-native-reanimated';
 

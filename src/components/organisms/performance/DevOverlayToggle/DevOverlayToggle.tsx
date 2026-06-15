@@ -1,3 +1,4 @@
+/** __DEV__ toggle for performance overlay visibility (performanceStore.isOverlayVisible). */
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

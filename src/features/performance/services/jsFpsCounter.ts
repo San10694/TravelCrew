@@ -1,8 +1,13 @@
 /**
- * RCTFPSGraph-equivalent tick counting via requestAnimationFrame.
- * Counts frames over >=1s windows: round(frameCount / elapsedSeconds).
+ * JS event-loop FPS sampler (RCTFPSGraph-equivalent via requestAnimationFrame).
+ * Counts ticks over >=1s windows; output clamped to maxRefreshRate.
  */
-export function startJsFpsCounter(onFps: (fps: number) => void): () => void {
+import { clampFps } from '@/features/performance/services/clampFps';
+
+export function startJsFpsCounter(
+  onFps: (fps: number) => void,
+  maxRefreshRate = 60,
+): () => void {
   let frameCount = 0;
   let prevTimeSec = -1;
   let rafId: number | null = null;
@@ -19,7 +24,7 @@ export function startJsFpsCounter(onFps: (fps: number) => void): () => void {
     if (prevTimeSec < 0) {
       prevTimeSec = timestampSec;
     } else if (timestampSec - prevTimeSec >= 1) {
-      const fps = Math.round(frameCount / (timestampSec - prevTimeSec));
+      const fps = clampFps(frameCount / (timestampSec - prevTimeSec), maxRefreshRate);
       onFps(fps);
       prevTimeSec = timestampSec;
       frameCount = 0;

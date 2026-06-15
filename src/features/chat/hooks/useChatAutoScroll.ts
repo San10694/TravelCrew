@@ -1,3 +1,10 @@
+/**
+ * Auto-scroll engine for chat inside a gorhom bottom sheet.
+ *
+ * Scrolls BottomSheetScrollView to latest on user send, streaming growth, layout changes,
+ * and keyboard open. Respects scroll-up history via near-bottom guard. Retries scrollToEnd
+ * at 0/50/150ms to handle async layout updates after composer padding changes.
+ */
 import {
   useScrollEventsHandlersDefault,
   type BottomSheetScrollViewMethods,

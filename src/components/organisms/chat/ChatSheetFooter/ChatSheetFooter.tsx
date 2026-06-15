@@ -1,3 +1,7 @@
+/**
+ * Gorhom bottom sheet footer wrapping ChatInput.
+ * Bridges sendMessage from ChatSheetContext; input disabled during thinking/streaming.
+ */
 import { BottomSheetFooter, type BottomSheetFooterProps } from '@gorhom/bottom-sheet';
 
 import { ChatInput } from '@/components/molecules/chat/ChatInput';

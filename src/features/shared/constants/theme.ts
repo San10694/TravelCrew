@@ -1,3 +1,9 @@
+/**
+ * Design system tokens used across all UI layers.
+ *
+ * Exports colors, typography variants, spacing, radii, shadows, and layout constants
+ * (image sizes, card heights, FAB/input dimensions). Atoms should only import from here.
+ */
 import type { TextStyle, ViewStyle } from 'react-native';
 
 export const colors = {
@@ -83,7 +89,7 @@ export const layout = {
   itineraryImageWidth: 140,
   itineraryImageHeight: 100,
   collapsedCardHeight: 340,
-  itinerarySectionHeight: 160,
+  itinerarySectionHeight: 196,
   fabSize: 52,
   fabMinWidth: 140,
   inputHeight: 44,

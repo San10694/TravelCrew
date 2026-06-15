@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/atoms/AppText';
 import { RemoteImage } from '@/components/atoms/RemoteImage';
 import type { ItineraryItem } from '@/features/feed/types/travelBundle';
-import { colors, layout, radii, spacing } from '@/features/shared/constants/theme';
+import { colors, fontFamily, layout, radii, spacing } from '@/features/shared/constants/theme';
 
 type ItineraryRowProps = {
   item: ItineraryItem;
@@ -36,9 +36,10 @@ const styles = StyleSheet.create({
     width: layout.itineraryImageWidth,
   },
   day: {
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
   },
   title: {
-    marginTop: 2,
+    fontFamily: fontFamily.semiBold,
+    marginTop: spacing.xs,
   },
 });

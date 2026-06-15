@@ -1,3 +1,12 @@
+/**
+ * JS bridge for the dev-menu-fps Expo native module.
+ *
+ * Responsibility: lazy-load the native module in __DEV__ only and expose a safe API
+ * for UI FPS monitoring. Returns no-ops when unavailable (Expo Go, web, production).
+ *
+ * UI FPS is sampled natively (CADisplayLink / Choreographer). JS FPS is measured
+ * separately in jsFpsCounter.ts via requestAnimationFrame.
+ */
 import { requireNativeModule } from 'expo-modules-core';
 import { Platform } from 'react-native';
 
@@ -10,6 +19,7 @@ type FpsUpdateSubscription = {
 };
 
 type DevMenuFpsNativeModule = {
+  getMaxRefreshRate: () => number;
   startMonitoring: () => void;
   stopMonitoring: () => void;
   addListener: (
@@ -41,6 +51,10 @@ function getNativeModule(): DevMenuFpsNativeModule | null {
 
 export function isDevMenuFpsAvailable(): boolean {
   return getNativeModule() !== null;
+}
+
+export function getMaxRefreshRate(): number {
+  return getNativeModule()?.getMaxRefreshRate() ?? 60;
 }
 
 export function startMonitoring(): void {

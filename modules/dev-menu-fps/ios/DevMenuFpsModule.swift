@@ -1,3 +1,5 @@
+// Expo module entry for iOS. Bridges DevMenuFpsMonitor to JS via onFpsUpdate events.
+// Exposes start/stop monitoring and getMaxRefreshRate (UIScreen.maximumFramesPerSecond).
 import ExpoModulesCore
 
 private let onFpsUpdate = "onFpsUpdate"
@@ -20,6 +22,10 @@ public class DevMenuFpsModule: Module {
 
     Function("stopMonitoring") {
       DevMenuFpsMonitor.shared().stop()
+    }
+
+    Function("getMaxRefreshRate") { () -> Int in
+      Int(UIScreen.main.maximumFramesPerSecond)
     }
   }
 }

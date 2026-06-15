@@ -39,7 +39,9 @@ Instrumentation runs **only when the overlay is visible** (`usePerformanceInstru
 | P50 / P95 / Worst | Last 60 frame times | UI → JS | 1 Hz | Not shown in compact bar |
 | JS Scheduling | setInterval → rAF drift | JS | ~10 Hz | Not shown in compact bar |
 
-Both FPS metrics **default to 60** until the first measurement window completes.
+Both FPS metrics **default to the device max refresh rate** (60 on standard displays, 120 on ProMotion) until the first measurement window completes.
+
+Reported FPS is **clamped to `getMaxRefreshRate()`** so `round(frameCount / elapsed)` does not overshoot (e.g. 61 on a 60 Hz display).
 
 ---
 
@@ -47,7 +49,7 @@ Both FPS metrics **default to 60** until the first measurement window completes.
 
 Local Expo module: [`modules/dev-menu-fps/`](modules/dev-menu-fps/)
 
-Ports `RCTFPSGraph` tick counting: `round(frameCount / elapsedSeconds)` over a completed window.
+Ports `RCTFPSGraph` tick counting: `round(frameCount / elapsedSeconds)` over a completed window, then clamped to `UIScreen.maximumFramesPerSecond` (iOS) or display refresh rate (Android).
 
 | Platform | Mechanism | Window |
 |----------|-----------|--------|
@@ -62,7 +64,7 @@ Native events emit `{ uiFps }` only. Requires a **dev build** (`npx expo run:ios
 
 [`src/features/performance/services/jsFpsCounter.ts`](src/features/performance/services/jsFpsCounter.ts)
 
-Same tick-count formula as `RCTFPSGraph`, implemented with `requestAnimationFrame` on the RN JS event loop.
+Same tick-count formula as `RCTFPSGraph`, implemented with `requestAnimationFrame` on the RN JS event loop. Output is clamped via [`clampFps.ts`](src/features/performance/services/clampFps.ts) to `getMaxRefreshRate()`.
 
 Native JS `CADisplayLink` is **not** used — on New Architecture (`newArchEnabled: true`) the JS runtime executor does not pump an `NSRunLoop`, so native JS display links never fire.
 
@@ -113,7 +115,7 @@ First **500 ms** after overlay open excluded from drop counting and percentile s
 | Scenario | Expected |
 |----------|----------|
 | Expo Go / web | FPS shows `—` |
-| Dev build idle | UI/JS start at 60, update within ~1 s; within ±1–2 of RN Perf Monitor |
+| Dev build idle | UI/JS start at max refresh rate, update within ~1 s; clamped to display Hz (60 on standard, 120 on ProMotion) |
 | ProMotion (120 Hz) | UI FPS ~120 when dev menu also shows ~120 |
 | Fast scroll | UI FPS dips, P95 rises, session drops increment |
 | Travel Crew AI streaming | JS FPS dips on load |

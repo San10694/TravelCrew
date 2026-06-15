@@ -1,3 +1,9 @@
+/**
+ * App bootstrap hook (shared ViewModel for root layout).
+ *
+ * Loads Plus Jakarta Sans fonts, hides splash when ready, and owns global chat sheet
+ * state: ref for imperative open/close, isChatOpen for FAB visibility (optimistic on open).
+ */
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,

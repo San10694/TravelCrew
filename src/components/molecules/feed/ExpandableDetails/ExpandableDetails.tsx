@@ -1,3 +1,7 @@
+/**
+ * Animated height container for itinerary section inside TravelCard.
+ * Interpolates expandedProgress (0→1) to layout.itinerarySectionHeight; mounts ItineraryList when expanded.
+ */
 import Animated, { interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import { ItineraryList } from '@/components/molecules/feed/ItineraryList';

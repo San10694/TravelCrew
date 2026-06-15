@@ -1,3 +1,9 @@
+/**
+ * Sends user messages and streams assistant replies (Anthropic API or mock).
+ *
+ * Owns the single active stream controller. Batches tokens into chatStore for smooth
+ * UI updates. Cancels in-flight streams when a new message is sent.
+ */
 import { useCallback, useRef } from 'react';
 
 import { getMockAssistantResponse, tokenizeResponse } from '@/features/chat/data/mockResponses';

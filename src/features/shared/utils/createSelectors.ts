@@ -1,3 +1,9 @@
+/**
+ * Zustand helper: auto-generates per-field selector hooks from store state keys.
+ *
+ * After wrapping a store with createSelectors, use store.use.bundles() instead of
+ * store((s) => s.bundles) for ergonomic subscriptions.
+ */
 import type { StoreApi, UseBoundStore } from 'zustand';
 
 type WithSelectors<S> = S extends { getState: () => infer T }

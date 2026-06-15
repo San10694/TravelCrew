@@ -1,3 +1,7 @@
+/**
+ * Discover Trips route screen. Composes header, skeleton, and TravelFeedList.
+ * Calls useFeedScreen() only — no direct store/repository access (MVVM boundary).
+ */
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,7 +15,7 @@ import { useRerenderLogger } from '@/features/shared/utils/rerenderLogger';
 export function FeedScreen() {
   useRerenderLogger('FeedScreen');
 
-  const { bundles, isReady, contentBottomPadding } = useFeedScreen();
+  const { bundles, isReady, isRefreshing, refresh, contentBottomPadding } = useFeedScreen();
   const insets = useSafeAreaInsets();
 
   return (
@@ -21,7 +25,12 @@ export function FeedScreen() {
         subtitle="Curated travel bundles for your next adventure"
       />
       {isReady ? (
-        <TravelFeedList bundles={bundles} contentBottomPadding={contentBottomPadding} />
+        <TravelFeedList
+          bundles={bundles}
+          contentBottomPadding={contentBottomPadding}
+          refreshing={isRefreshing}
+          onRefresh={refresh}
+        />
       ) : (
         <FeedSkeletonList />
       )}

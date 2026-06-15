@@ -1,3 +1,10 @@
+/**
+ * Root Expo Router layout.
+ *
+ * Wires global providers (gesture handler, safe area, performance metrics),
+ * bootstraps fonts/splash via useAppShell, and mounts AppOverlays above all routes.
+ * Screen content renders through <Slot />; overlays (chat sheet, FAB, dev perf HUD) sit on top.
+ */
 import 'react-native-gesture-handler';
 
 import { Slot } from 'expo-router';

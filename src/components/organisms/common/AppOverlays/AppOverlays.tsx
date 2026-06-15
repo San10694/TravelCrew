@@ -1,3 +1,9 @@
+/**
+ * Global overlay layer mounted above all screens in root layout.
+ *
+ * Renders FeedFab (Ask Travel Crew), ChatBottomSheet, and __DEV__ performance HUD.
+ * Uses pointerEvents="box-none" so touches pass through to the feed except on controls.
+ */
 import { type RefObject } from 'react';
 import { StyleSheet, View } from 'react-native';
 

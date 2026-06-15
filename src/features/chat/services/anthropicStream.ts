@@ -1,3 +1,9 @@
+/**
+ * Anthropic Messages API streaming client for Travel Crew chat.
+ *
+ * Reads EXPO_PUBLIC_ANTHROPIC_API_KEY; parses SSE text deltas and invokes onTextDelta.
+ * When no key is configured, useStreamingResponse falls back to mockResponses.
+ */
 import type { Message } from '@/features/chat/types/message';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
