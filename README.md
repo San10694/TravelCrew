@@ -4,11 +4,20 @@ A React Native travel discovery app built with Expo: a high-performance feed, an
 
 ## Demo
 
-
-| iOS                           | Android                       |
-| ----------------------------- | ----------------------------- |
-| *Video recording to be added* | *Video recording to be added* |
-
+<table>
+  <tr>
+    <td align="center"><b>iOS</b></td>
+    <td align="center"><b>Android</b></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <video src="assets/demo/ios-demo.mp4" width="280" controls muted loop playsinline />
+    </td>
+    <td align="center">
+      <video src="assets/demo/android-demo.mp4" width="280" controls muted loop playsinline />
+    </td>
+  </tr>
+</table>
 
 ## Setup
 
