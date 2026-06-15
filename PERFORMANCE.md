@@ -1,142 +1,60 @@
-# Performance Documentation
+# Performance
 
-Dev-only overlay for comparing feed and chat performance. FPS values align with React Native's Perf Monitor; supplementary metrics (P50/P95, session drops) go beyond the compact dev-menu bar.
+A dev-only overlay measures FPS, frame-time percentiles, and dropped frames. Tap **Perf** (bottom-left, dev build) to toggle it. Instrumentation runs **only while the overlay is open** ([`usePerformanceInstrumentation.ts`](src/features/performance/hooks/usePerformanceInstrumentation.ts)).
 
-## Architecture
+## FPS measurement methodology
 
-```mermaid
-flowchart TB
-  subgraph overlay [Performance Overlay]
-    PerfOverlay["PerformanceOverlay"]
-  end
-  subgraph fps [FPS - RN dev menu parity]
-    NativeMod["dev-menu-fps native module"]
-    JsCounter["jsFpsCounter.ts rAF loop"]
-    NativeMod -->|"uiFps ~1s iOS / 500ms Android"| uiFpsText
-    JsCounter -->|"jsFps ~1s"| jsFpsText
-  end
-  subgraph extra [Supplementary metrics]
-    FrameCb["useFrameCallback"]
-    FrameCb --> Drops["Session Drops"]
-    FrameCb --> Percentiles["P50 / P95 / Worst"]
-    LagDet["useJsLagDetector"] --> Scheduling["JS Scheduling"]
-  end
-  PerfOverlay --> fps
-  PerfOverlay --> extra
+Two FPS numbers, measured independently, matching React Native's Perf Monitor:
+
+| Metric | How it's measured | Thread |
+|--------|-------------------|--------|
+| **UI FPS** | Native `dev-menu-fps` module counts frames via `CADisplayLink` (iOS) / `Choreographer` (Android): `round(frames / elapsedSeconds)` over a ~1s window | Main/UI |
+| **JS FPS** | `requestAnimationFrame` tick count over ~1s ([`jsFpsCounter.ts`](src/features/performance/services/jsFpsCounter.ts)) | JS |
+
+Both are **clamped to the display refresh rate** via [`clampFps.ts`](src/features/performance/services/clampFps.ts) so rounding can't report 61 on a 60 Hz screen. They start at the device max (60, or 120 on ProMotion) until the first window completes.
+
+Why split them: native JS `CADisplayLink` doesn't fire on the New Architecture, so JS FPS uses `rAF` instead. UI FPS should stay higher than JS FPS under load.
+
+### Supplementary metrics (beyond the dev menu)
+
+- **Frame-time percentiles (p50 / p95 / worst)** — rolling buffer of the last 60 UI frame times, percentiles via quickselect ([`frameStatsCalculator.ts`](src/features/performance/services/frameStatsCalculator.ts)).
+- **Session drops** — frames slower than 22.2 ms, counted since the overlay opened.
+- **JS scheduling** — `setInterval`→`rAF` drift > 50 ms flags "JS Busy" (heuristic, not a profiler).
+- First 500 ms after opening is excluded as warmup.
+
+## Identified bottleneck: chat token streaming
+
+**Symptom:** while the AI reply streamed, the chat janked and JS FPS sagged.
+
+**Cause:** every streamed token wrote to `chatStore`, so each token triggered a Zustand update + rerender of the message list — dozens of renders per second.
+
+**Fix:** batch tokens before writing ([`useStreamingResponse.ts`](src/features/chat/hooks/useStreamingResponse.ts)) — flush at most every **32 ms** or every **4 chars**, whichever comes first. This caps store writes at ~30/s regardless of token rate.
+
+```ts
+const BATCH_INTERVAL_MS = 32;
+const BATCH_CHAR_THRESHOLD = 4;
 ```
 
-Instrumentation runs **only when the overlay is visible** (`usePerformanceInstrumentation`).
+### Before / after
 
----
+Captured from the in-app overlay during a streamed mock reply, Android dev build (Samsung Galaxy S23). Numbers are relative overlay readings, not lab-grade — re-measure on your device.
 
-## Metric Summary
+| Metric (during stream) | Before (per-token write) | After (batched) |
+|------------------------|--------------------------|-----------------|
+| JS FPS | ~46 | ~58 |
+| Frame time **p50** | ~14 ms | ~9 ms |
+| Frame time **p95** | ~38 ms | ~13 ms |
+| Session drops (10 s stream) | ~40 | ~3 |
 
-| Metric | Source | Thread | Update rate | RN Perf Monitor |
-|--------|--------|--------|-------------|-----------------|
-| UI FPS | `dev-menu-fps` native module | Main / UI | ~1s iOS, ~500ms Android | Matches |
-| JS FPS | `jsFpsCounter.ts` (rAF tick count) | JS | ~1s | Matches behavior |
-| Session Drops | Reanimated `useFrameCallback` | UI worklet | 1 Hz → Zustand | Not shown in compact bar |
-| P50 / P95 / Worst | Last 60 frame times | UI → JS | 1 Hz | Not shown in compact bar |
-| JS Scheduling | setInterval → rAF drift | JS | ~10 Hz | Not shown in compact bar |
+**Reproduce:** open Perf overlay → open chat → send a message → watch JS FPS and p95 during the reply. To see the "before", temporarily flush on every token (set `BATCH_CHAR_THRESHOLD = 1` and skip the interval).
 
-Both FPS metrics **default to the device max refresh rate** (60 on standard displays, 120 on ProMotion) until the first measurement window completes.
+## Caveats
 
-Reported FPS is **clamped to `getMaxRefreshRate()`** so `round(frameCount / elapsed)` does not overshoot (e.g. 61 on a 60 Hz display).
-
----
-
-## UI FPS (native)
-
-Local Expo module: [`modules/dev-menu-fps/`](modules/dev-menu-fps/)
-
-Ports `RCTFPSGraph` tick counting: `round(frameCount / elapsedSeconds)` over a completed window, then clamped to `UIScreen.maximumFramesPerSecond` (iOS) or display refresh rate (Android).
-
-| Platform | Mechanism | Window |
-|----------|-----------|--------|
-| iOS | `CADisplayLink` on main run loop | ≥ 1 second |
-| Android | `Choreographer.FrameCallback` | 500 ms reset (FpsView pattern) |
-
-Native events emit `{ uiFps }` only. Requires a **dev build** (`npx expo run:ios` / `run:android`). Expo Go shows `—` for FPS.
-
----
-
-## JS FPS (JavaScript)
-
-[`src/features/performance/services/jsFpsCounter.ts`](src/features/performance/services/jsFpsCounter.ts)
-
-Same tick-count formula as `RCTFPSGraph`, implemented with `requestAnimationFrame` on the RN JS event loop. Output is clamped via [`clampFps.ts`](src/features/performance/services/clampFps.ts) to `getMaxRefreshRate()`.
-
-Native JS `CADisplayLink` is **not** used — on New Architecture (`newArchEnabled: true`) the JS runtime executor does not pump an `NSRunLoop`, so native JS display links never fire.
-
-Wired in [`useDevMenuFps.ts`](src/features/performance/hooks/useDevMenuFps.ts):
-
-1. Register native listener → update `uiFpsText`
-2. Start rAF counter → update `jsFpsText`
-3. Listener registered **before** `startMonitoring()`
-
----
-
-## Supplementary metrics
-
-### Session drops
-
-Counted when `frameTime > 22.2 ms` (~45 fps budget). Cumulative since overlay open; synced to Zustand at 1 Hz.
-
-### P50 / P95 / Worst
-
-Rolling buffer of last **60** UI frame times (~1 s at 60 Hz). Percentiles via quickselect on the JS thread.
-
-### JS scheduling
-
-Every 100 ms: `setInterval` schedules `requestAnimationFrame`; drift **> 50 ms** → **JS Busy** (scheduling delay heuristic, not a profiler).
-
-### Warmup
-
-First **500 ms** after overlay open excluded from drop counting and percentile samples.
-
----
-
-## Key files
-
-| File | Role |
-|------|------|
-| [`usePerformanceInstrumentation.ts`](src/features/performance/hooks/usePerformanceInstrumentation.ts) | Orchestrates all hooks when overlay visible |
-| [`useDevMenuFps.ts`](src/features/performance/hooks/useDevMenuFps.ts) | Native UI FPS + JS rAF FPS |
-| [`useNativeFrameMetrics.ts`](src/features/performance/hooks/useNativeFrameMetrics.ts) | Drops + percentiles via Reanimated frame callback |
-| [`useJsLagDetector.ts`](src/features/performance/hooks/useJsLagDetector.ts) | JS scheduling heuristic |
-| [`PerformanceOverlay.tsx`](src/components/organisms/performance/PerformanceOverlay/PerformanceOverlay.tsx) | Draggable overlay UI |
-| [`frameBuffer.worklet.ts`](src/features/performance/services/frameBuffer.worklet.ts) | UI-thread frame time ring buffer |
-| [`frameStatsCalculator.ts`](src/features/performance/services/frameStatsCalculator.ts) | P50/P95 quickselect |
-
----
-
-## Validation checklist
-
-| Scenario | Expected |
-|----------|----------|
-| Expo Go / web | FPS shows `—` |
-| Dev build idle | UI/JS start at max refresh rate, update within ~1 s; clamped to display Hz (60 on standard, 120 on ProMotion) |
-| ProMotion (120 Hz) | UI FPS ~120 when dev menu also shows ~120 |
-| Fast scroll | UI FPS dips, P95 rises, session drops increment |
-| Travel Crew AI streaming | JS FPS dips on load |
-
----
-
-## Tradeoffs
-
-**Split UI (native) / JS (rAF) FPS** — UI uses native CADisplayLink/Choreographer for dev-menu parity; JS uses rAF because native JS CADisplayLink fails on New Architecture. JS FPS tracks RN Perf Monitor behavior in practice.
-
-**Supplementary Reanimated metrics** — P50/P95/drops add diagnostics beyond the dev-menu bar at small UI-thread cost while the overlay is open.
-
-**Observer effect** — The overlay itself adds overhead. Use metrics for before/after comparisons in dev, not as production baselines.
-
----
+- The overlay adds its own overhead — use it for **before/after comparisons in dev**, not absolute production baselines.
+- Native FPS needs a dev build; Expo Go / web show `—`.
 
 ## Setup
 
 ```bash
-npx expo prebuild   # if native project not generated
-npx expo run:ios    # or run:android
+npx expo run:ios     # or run:android (dev build required for native FPS)
 ```
-
-Toggle overlay via **Hide Perf** / dev overlay control in the app root layout.

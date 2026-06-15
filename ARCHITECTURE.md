@@ -56,10 +56,10 @@ View                                     - - - - - - - - →  Model  ✗ forbidd
 ### Feed
 
 1. `FeedScreen` calls `useFeedScreen()` (ViewModel).
-2. `useFeedScreen` loads bundles via `feedRepository.loadFeedBundles()` on mount.
+2. `useFeedScreen` loads bundles via `feedRepository.loadFeedBundles()` on mount, and exposes a `refresh()` command + `isRefreshing` flag for pull-to-refresh.
 3. Repository wraps `generateBundles()` today; swap for a real API later.
 4. `feedStore` holds `bundles` + `status`; no data generation at import time.
-5. `FeedScreen` (in `features/feed/screens/`) passes `bundles`, `isReady`, and `contentBottomPadding` to child organisms.
+5. `FeedScreen` (in `features/feed/screens/`) passes `bundles`, `isReady`, `isRefreshing`, `refresh`, and `contentBottomPadding` to `TravelFeedList`, which wires a themed `RefreshControl`.
 
 ### Chat
 
