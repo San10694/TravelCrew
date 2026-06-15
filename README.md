@@ -2,6 +2,14 @@
 
 A React Native travel discovery app built with Expo: a high-performance feed, an AI chat bottom sheet, and a custom dev performance overlay.
 
+## Demo
+
+
+| iOS                           | Android                       |
+| ----------------------------- | ----------------------------- |
+| *Video recording to be added* | *Video recording to be added* |
+
+
 ## Setup
 
 ```bash
@@ -20,25 +28,29 @@ Requirements: Node 20+, Xcode (iOS) or Android Studio (Android).
 
 ## Tech Stack
 
-| Tech | Purpose |
-|------|---------|
+
+| Tech                      | Purpose                      |
+| ------------------------- | ---------------------------- |
 | Expo SDK 56 / Expo Router | Runtime + file-based routing |
-| TypeScript (strict) | Type safety |
-| Zustand | State management |
-| FlashList v2 | Virtualized feed |
-| Reanimated v4 | UI-thread animations |
-| @gorhom/bottom-sheet | AI chat sheet |
-| expo-image | Cached remote images |
+| TypeScript (strict)       | Type safety                  |
+| Zustand                   | State management             |
+| FlashList v2              | Virtualized feed             |
+| Reanimated v4             | UI-thread animations         |
+| @gorhom/bottom-sheet      | AI chat sheet                |
+| expo-image                | Cached remote images         |
+
 
 ## State Management
 
 Plain **Zustand** with three small, isolated stores — no Redux boilerplate, no context churn:
 
-| Store | Holds |
-|-------|-------|
-| `feedStore` | Travel bundles + load status |
-| `chatStore` | Messages + thinking/streaming flags |
+
+| Store              | Holds                                |
+| ------------------ | ------------------------------------ |
+| `feedStore`        | Travel bundles + load status         |
+| `chatStore`        | Messages + thinking/streaming flags  |
 | `performanceStore` | Frame drops + percentiles (dev only) |
+
 
 **Rationale:**
 
@@ -68,3 +80,4 @@ npm run ios        # iOS
 npm run android    # Android
 npx tsc --noEmit   # Type-check
 ```
+
